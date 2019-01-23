@@ -93,7 +93,8 @@ XSlider.prototype.moveForward = function(e) {
     var that = this;
     this.onScrolled = true;
     let container = this.$container;
-    let firstSlide = container.find(this.itemSelector).first();
+    let visibleItems = this.getVisibleItems();
+    let firstSlide = container.find(visibleItems);
     let clone = firstSlide.clone();
     container
         .append(clone)
@@ -105,7 +106,14 @@ XSlider.prototype.moveForward = function(e) {
                 container.css( { "left": "0px" });
                 that.endSlide();
             }
-        )
+        );
+
+
+    console.log(firstSlide);
+    
+   	console.log(this.$viewport.outerWidth(false));
+
+    console.log(visibleItems);
 };
 
 XSlider.prototype.moveBack = function(e) {
@@ -149,6 +157,7 @@ XSlider.prototype.getVisibleItems = function() {
     }
 
     return visible;
+
 };
 
 XSlider.prototype.isSlideVisible = function(slide) {
@@ -162,26 +171,26 @@ XSlider.prototype.isSlideVisible = function(slide) {
 /* XSLIDER END */
 
 
-/* HELPERS */
-function getNumEnding(number, endingArray) {
-    var number = number % 100;
-    if (number>=11 && number<=19) {
-        var ending=endingArray[2];
-    }
-    else {
-        var  i = number % 10;
-        switch (i)
-        {
-            case (1): ending = endingArray[0]; break;
-            case (2):
-            case (3):
-            case (4): ending = endingArray[1]; break;
-            default: ending=endingArray[2];
-        }
-    }
-    return ending;
-}
-/* END HELPERS */
+// /* HELPERS */
+// function getNumEnding(number, endingArray) {
+//     var number = number % 100;
+//     if (number>=11 && number<=19) {
+//         var ending=endingArray[2];
+//     }
+//     else {
+//         var  i = number % 10;
+//         switch (i)
+//         {
+//             case (1): ending = endingArray[0]; break;
+//             case (2):
+//             case (3):
+//             case (4): ending = endingArray[1]; break;
+//             default: ending=endingArray[2];
+//         }
+//     }
+//     return ending;
+// }
+// /* END HELPERS */
 
 /* LAZY LOAD */
 function lazy(){
@@ -543,201 +552,201 @@ function lazyUpdate()  {
     });
     /* END SLIDER */
 
-    var msg = $(".js_subscribe_mess");
+//     var msg = $(".js_subscribe_mess");
 
-    $('.subscribe-form').submit(function(e) {
-        e.preventDefault();
+//     $('.subscribe-form').submit(function(e) {
+//         e.preventDefault();
 
-        var form = $(this);
-        var input = form.find('.js__subscribe-email');
+//         var form = $(this);
+//         var input = form.find('.js__subscribe-email');
 
-        var email = input.val();
-        if (email.length <= 0) {
-            return false;
-        }
+//         var email = input.val();
+//         if (email.length <= 0) {
+//             return false;
+//         }
 
-        var re = /\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,6}/;
+//         var re = /\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,6}/;
 
-        if (!email.match(re)) {
-            msg.text('Введите корректный e-mail');
-            return false;
-        }
+//         if (!email.match(re)) {
+//             msg.text('Введите корректный e-mail');
+//             return false;
+//         }
 
-        if (email.length > 0) {
-            api.subscribe.add({email:email}, function (res) {
+//         if (email.length > 0) {
+//             api.subscribe.add({email:email}, function (res) {
 
-                if(res.result){
-                    msg.text(res.result);
-                } else {
-                    // console.log(res.warnings[0].message);
-                    msg.text(res.warnings[0].message);
-                }
+//                 if(res.result){
+//                     msg.text(res.result);
+//                 } else {
+//                     // console.log(res.warnings[0].message);
+//                     msg.text(res.warnings[0].message);
+//                 }
 
-                form.children().slideUp(200);
-            });
+//                 form.children().slideUp(200);
+//             });
 
-            /*$.ajax({
-                type: 'get',
-                url: 'https://www.chitai-gorod.ru/local/rest/subscribe/',
-                data: {
-                    email: email
-                },
-                success: function(data) {
-                    //1 - if add new subscriber, 0 - false add
-                    var res = parseInt(data);
-                    var text = (res) ? 'На Ваш email отправлено письмо для подтверждения подписки' : 'Вы уже подписаны на рассылку';
-                    form.children().slideUp(200);
-                    msg.text(text);
-                    if (!msg.prop('insert')) {
-                        form.append(msg);
-                        msg.prop('insert', true)
-                    }
-                    input.val('');
-                }
-            })*/
-        }
-    })
-    /* END SUBSCRIBE */
-
-
-
-    /* DIFFERENT SHOW-hIDE BLOCKS */
-    $(document).on('click', '.show-more', function(e){
-        var parent = $(this).closest('.full-short');
-        parent.toggleClass('full');
-    });
-
-    $('.info-msg__close').click( function () {
-        $(this).closest('.info-msg').hide();
-    });
-    /* END DIFFERENT SHOW-hIDE BLOCKS */
+//             /*$.ajax({
+//                 type: 'get',
+//                 url: 'https://www.chitai-gorod.ru/local/rest/subscribe/',
+//                 data: {
+//                     email: email
+//                 },
+//                 success: function(data) {
+//                     //1 - if add new subscriber, 0 - false add
+//                     var res = parseInt(data);
+//                     var text = (res) ? 'На Ваш email отправлено письмо для подтверждения подписки' : 'Вы уже подписаны на рассылку';
+//                     form.children().slideUp(200);
+//                     msg.text(text);
+//                     if (!msg.prop('insert')) {
+//                         form.append(msg);
+//                         msg.prop('insert', true)
+//                     }
+//                     input.val('');
+//                 }
+//             })*/
+//         }
+//     })
+//     /* END SUBSCRIBE */
 
 
-    $('.x-label').click(function() {
-        $(this).toggleClass('opened')
-    });
-// });
 
-function toggleActiveClass(elem, normal, active) {
-    if (!elem) {
-        throw new Error('Не хватает аргументов');
-    }
-    if (!active) {
-        active = normal.substring(1) + '_active';
-    }
-    $(elem).parent().find(normal).removeClass(active);
-    $(elem).addClass(active);
-}
+//     /* DIFFERENT SHOW-hIDE BLOCKS */
+//     $(document).on('click', '.show-more', function(e){
+//         var parent = $(this).closest('.full-short');
+//         parent.toggleClass('full');
+//     });
 
-//classList
-(function() {
-    // helpers
-    var regExp = function(name) {
-        return new RegExp('(^| )'+ name +'( |$)');
-    };
-    var forEach = function(list, fn, scope) {
-        for (var i = 0; i < list.length; i++) {
-            fn.call(scope, list[i]);
-        }
-    };
+//     $('.info-msg__close').click( function () {
+//         $(this).closest('.info-msg').hide();
+//     });
+//     /* END DIFFERENT SHOW-hIDE BLOCKS */
 
-    // class list object with basic methods
-    function ClassList(element) {
-        this.element = element;
-    }
 
-    ClassList.prototype = {
-        add: function() {
-            forEach(arguments, function(name) {
-                if (!this.contains(name)) {
-                    this.element.className += ' '+ name;
-                }
-            }, this);
-        },
-        remove: function() {
-            forEach(arguments, function(name) {
-                this.element.className =
-                    this.element.className.replace(regExp(name), '');
-            }, this);
-        },
-        toggle: function(name) {
-            return this.contains(name)
-                ? (this.remove(name), false) : (this.add(name), true);
-        },
-        contains: function(name) {
-            return regExp(name).test(this.element.className);
-        },
-        // bonus..
-        replace: function(oldName, newName) {
-            this.remove(oldName), this.add(newName);
-        }
-    };
+//     $('.x-label').click(function() {
+//         $(this).toggleClass('opened')
+//     });
+// // });
 
-    // IE8/9, Safari
-    if (!('classList' in Element.prototype)) {
-        Object.defineProperty(Element.prototype, 'classList', {
-            get: function() {
-                return new ClassList(this);
-            }
-        });
-    }
+// function toggleActiveClass(elem, normal, active) {
+//     if (!elem) {
+//         throw new Error('Не хватает аргументов');
+//     }
+//     if (!active) {
+//         active = normal.substring(1) + '_active';
+//     }
+//     $(elem).parent().find(normal).removeClass(active);
+//     $(elem).addClass(active);
+// }
 
-    // replace() support for others
-    if (window.DOMTokenList && DOMTokenList.prototype.replace == null) {
-        DOMTokenList.prototype.replace = ClassList.prototype.replace;
-    }
-})();
+// //classList
+// (function() {
+//     // helpers
+//     var regExp = function(name) {
+//         return new RegExp('(^| )'+ name +'( |$)');
+//     };
+//     var forEach = function(list, fn, scope) {
+//         for (var i = 0; i < list.length; i++) {
+//             fn.call(scope, list[i]);
+//         }
+//     };
 
-// closest
-if (window.Element && !Element.prototype.closest) {
-    Element.prototype.closest =
-        function(s) {
-            var matches = (this.document || this.ownerDocument).querySelectorAll(s),
-                i,
-                el = this;
-            do {
-                i = matches.length;
-                while (--i >= 0 && matches.item(i) !== el) {};
-            } while ((i < 0) && (el = el.parentElement));
-            return el;
-        };
-}
+//     // class list object with basic methods
+//     function ClassList(element) {
+//         this.element = element;
+//     }
 
-// matches
-if (!Element.prototype.matches) {
-    Element.prototype.matches =
-        Element.prototype.matchesSelector ||
-        Element.prototype.mozMatchesSelector ||
-        Element.prototype.msMatchesSelector ||
-        Element.prototype.oMatchesSelector ||
-        Element.prototype.webkitMatchesSelector ||
-        function(s) {
-            var matches = (this.document || this.ownerDocument).querySelectorAll(s),
-                i = matches.length;
-            while (--i >= 0 && matches.item(i) !== this) {}
-            return i > -1;
-        };
-}
-// append
-(function (arr) {
-    arr.forEach(function (item) {
-        if (item.hasOwnProperty('append')) {
-            return;
-        }
-        Object.defineProperty(item, 'append', {
-            configurable: true,
-            enumerable: true,
-            writable: true,
-            value: function append() {
-                var argArr = Array.prototype.slice.call(arguments),
-                    docFrag = document.createDocumentFragment();
-                argArr.forEach(function (argItem) {
-                    var isNode = argItem instanceof Node;
-                    docFrag.appendChild(isNode ? argItem : document.createTextNode(String(argItem)));
-                });
+//     ClassList.prototype = {
+//         add: function() {
+//             forEach(arguments, function(name) {
+//                 if (!this.contains(name)) {
+//                     this.element.className += ' '+ name;
+//                 }
+//             }, this);
+//         },
+//         remove: function() {
+//             forEach(arguments, function(name) {
+//                 this.element.className =
+//                     this.element.className.replace(regExp(name), '');
+//             }, this);
+//         },
+//         toggle: function(name) {
+//             return this.contains(name)
+//                 ? (this.remove(name), false) : (this.add(name), true);
+//         },
+//         contains: function(name) {
+//             return regExp(name).test(this.element.className);
+//         },
+//         // bonus..
+//         replace: function(oldName, newName) {
+//             this.remove(oldName), this.add(newName);
+//         }
+//     };
 
-                this.appendChild(docFrag);
-            }
-        });
-    });
-})([Element.prototype, Document.prototype, DocumentFragment.prototype]);
+//     // IE8/9, Safari
+//     if (!('classList' in Element.prototype)) {
+//         Object.defineProperty(Element.prototype, 'classList', {
+//             get: function() {
+//                 return new ClassList(this);
+//             }
+//         });
+//     }
+
+//     // replace() support for others
+//     if (window.DOMTokenList && DOMTokenList.prototype.replace == null) {
+//         DOMTokenList.prototype.replace = ClassList.prototype.replace;
+//     }
+// })();
+
+// // closest
+// if (window.Element && !Element.prototype.closest) {
+//     Element.prototype.closest =
+//         function(s) {
+//             var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+//                 i,
+//                 el = this;
+//             do {
+//                 i = matches.length;
+//                 while (--i >= 0 && matches.item(i) !== el) {};
+//             } while ((i < 0) && (el = el.parentElement));
+//             return el;
+//         };
+// }
+
+// // matches
+// if (!Element.prototype.matches) {
+//     Element.prototype.matches =
+//         Element.prototype.matchesSelector ||
+//         Element.prototype.mozMatchesSelector ||
+//         Element.prototype.msMatchesSelector ||
+//         Element.prototype.oMatchesSelector ||
+//         Element.prototype.webkitMatchesSelector ||
+//         function(s) {
+//             var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+//                 i = matches.length;
+//             while (--i >= 0 && matches.item(i) !== this) {}
+//             return i > -1;
+//         };
+// }
+// // append
+// (function (arr) {
+//     arr.forEach(function (item) {
+//         if (item.hasOwnProperty('append')) {
+//             return;
+//         }
+//         Object.defineProperty(item, 'append', {
+//             configurable: true,
+//             enumerable: true,
+//             writable: true,
+//             value: function append() {
+//                 var argArr = Array.prototype.slice.call(arguments),
+//                     docFrag = document.createDocumentFragment();
+//                 argArr.forEach(function (argItem) {
+//                     var isNode = argItem instanceof Node;
+//                     docFrag.appendChild(isNode ? argItem : document.createTextNode(String(argItem)));
+//                 });
+
+//                 this.appendChild(docFrag);
+//             }
+//         });
+//     });
+// })([Element.prototype, Document.prototype, DocumentFragment.prototype]);
