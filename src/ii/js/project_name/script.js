@@ -99,7 +99,7 @@ XSlider.prototype.moveForward = function(e) {
     container
         .append(clone)
         .animate(
-            { left: this.itemWidth * -1 + "px"},
+            { left: this.$viewport.outerWidth(false) * -1 + "px"},
             200,
             function() {
                 firstSlide.detach();
@@ -108,24 +108,62 @@ XSlider.prototype.moveForward = function(e) {
             }
         );
 
-
-    console.log(firstSlide);
-    
-   	console.log(this.$viewport.outerWidth(false));
-
-    console.log(visibleItems);
 };
 
 XSlider.prototype.moveBack = function(e) {
+
+	let visibleItems = this.getVisibleItems();
+
     let that = this;
-    let lastSlide = this.$container.find(this.itemSelector).last().detach().prependTo(this.$container);
+    let lastSlide = this.$container.find(visibleItems).detach();
+
     this.$container
-        .css({ "left": this.itemWidth * -1 + "px"} )
+        .css({ "left": this.$viewport.outerWidth(false) * -1 + "px"} )
         .animate(
             { left: "0px" },
-            200,
+            350,
             that.endSlide.bind(that)
         )
+
+    const slidersBack = () => {
+    	let items = this.$container.find(this.itemSelector);
+	    let lengthViewport = visibleItems.length;
+	    let arr = [];
+	    
+	    for (var i = 0; i < this.itemsCount; i++) {
+	        var item = items[i];
+	        var itemStart = items[i];
+	        var itemFinish = items[i + 1];
+	        if (items < lengthViewport) {
+	            arr.push(item);
+	        }
+	        if (items >= lengthViewport) {
+	            break;
+	        }
+	    }
+	    console.log(arr);
+	    
+
+	    return arr;
+
+	};
+	console.log(this.itemsCount);
+	console.log(visibleItems.length);
+    console.log(this.$viewport.outerWidth(false));
+
+    console.log(visibleItems);
+    
+	// let that = this;
+ //    let lastSlide = this.$container.find(this.itemSelector).last().detach().prependTo(this.$container);
+ //    this.$container
+ //        .css({ "left": this.itemWidth * -1 + "px"} )
+ //        .animate(
+ //            { left: "0px" },
+ //            200,
+ //            that.endSlide.bind(that)
+ //        )
+
+    
 };
 
 XSlider.prototype.endSlide = function() {
