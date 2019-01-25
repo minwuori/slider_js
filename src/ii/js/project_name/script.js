@@ -100,7 +100,7 @@ XSlider.prototype.moveForward = function(e) {
         .append(clone)
         .animate(
             { left: this.$viewport.outerWidth(false) * -1 + "px"},
-            200,
+            350,
             function() {
                 firstSlide.detach();
                 container.css( { "left": "0px" });
@@ -113,55 +113,21 @@ XSlider.prototype.moveForward = function(e) {
 XSlider.prototype.moveBack = function(e) {
 
 	let visibleItems = this.getVisibleItems();
-
-    let that = this;
-    let lastSlide = this.$container.find(visibleItems).detach();
-
+   
+	let that = this;
+    let lastSlide = this.$container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.$container);
     this.$container
-        .css({ "left": this.$viewport.outerWidth(false) * -1 + "px"} )
+        .css({ "left": this.$viewport.outerWidth(false) * -1 + "px" })
         .animate(
             { left: "0px" },
             350,
             that.endSlide.bind(that)
         )
+ // 	console.log(this.itemsCount);
+	// console.log(visibleItems.length);
+ //    console.log(this.$viewport.outerWidth(false));
 
-    const slidersBack = () => {
-    	let items = this.$container.find(this.itemSelector);
-	    let lengthViewport = visibleItems.length;
-	    let arr = [];
-	    
-	    for (var i = 0; i < this.itemsCount; i++) {
-	        var item = items[i];
-	        var itemStart = items[i];
-	        var itemFinish = items[i + 1];
-	        if (items < lengthViewport) {
-	            arr.push(item);
-	        }
-	        if (items >= lengthViewport) {
-	            break;
-	        }
-	    }
-	    console.log(arr);
-	    
-
-	    return arr;
-
-	};
-	console.log(this.itemsCount);
-	console.log(visibleItems.length);
-    console.log(this.$viewport.outerWidth(false));
-
-    console.log(visibleItems);
-    
-	// let that = this;
- //    let lastSlide = this.$container.find(this.itemSelector).last().detach().prependTo(this.$container);
- //    this.$container
- //        .css({ "left": this.itemWidth * -1 + "px"} )
- //        .animate(
- //            { left: "0px" },
- //            200,
- //            that.endSlide.bind(that)
- //        )
+ //    console.log(visibleItems);
 
     
 };
