@@ -317,6 +317,7 @@ XSlider.prototype.moveForward = function(e) {
 XSlider.prototype.moveBack = function(e) {
 
 	let visibleItems = this.getVisibleItems();
+<<<<<<< HEAD
 	let that = this;
 	let lastSlide = this.$container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.$container);
 	this.$container
@@ -330,6 +331,25 @@ XSlider.prototype.moveBack = function(e) {
 	// console.log(visibleItems.length);
 	// console.log(this.$viewport.outerWidth(false));
 	// console.log(visibleItems);
+=======
+   
+	let that = this;
+    let lastSlide = this.$container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.$container);
+    this.$container
+        .css({ "left": this.$viewport.outerWidth(false) * -1 + "px" })
+        .animate(
+            { left: "0px" },
+            350,
+            that.endSlide.bind(that)
+        )
+ // 	console.log(this.itemsCount);
+	// console.log(visibleItems.length);
+ //    console.log(this.$viewport.outerWidth(false));
+
+ //    console.log(visibleItems);
+
+    
+>>>>>>> 966f939a3e8246ee9357e9f55f92dcdf52e0327e
 };
 
 XSlider.prototype.endSlide = function() {
