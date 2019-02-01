@@ -1,7 +1,49 @@
 
 /* XSLIDER */
-function XSlider(config) {
+function XSlider(config, settings) {
     this.$ = config.element;
+    this.default = {
+        accessibility: true,
+        autoplay: false,
+        autoplaySpeed: 3000,
+        draggable: true,
+        infinite: true,
+        lazyLoad: 'ondemand',
+        swipe: true,
+        swipeToSlide: true,
+        touchMove: true,
+        touchThreshold: 5,
+        verticalSwiping: true,
+    };
+
+    this.initials = {
+        animating: false,
+        dragging: false,
+        autoPlayTimer: null,
+        currentDirection: 0,
+        currentLeft: null,
+        currentSlide: 0,
+        direction: 1,
+        $dots: null,
+        listWidth: null,
+        loadIndex: 0,
+        $nextArrow: null,
+        $prevArrow: null,
+        itemsCount: null,
+        slideWidth: null,
+        $slideTrack: null,
+        $slides: null,
+        sliding: false,
+        slideOffset: 0,
+        swipeLeft: null,
+        swiping: false,
+        $viewport: null,
+        touchObject: {},        
+    };
+
+    Object.assign(this, this.initials);
+
+    this.options = Object.assign({}, this.defaults, settings);
 
     this.$.attr('data-slider', '');
     this.$.prop('slider', this);
@@ -38,10 +80,15 @@ function XSlider(config) {
     this.isControlsView = true;
     this.isControlsView = this.checkControlsView();
 
+    this.$slideTrack = '.slider__container';
+
     $(window).on("resize", this.onEnvChange.bind(this));
 
     this.$next.on("click", this.moveForward.bind(this));
     this.$prev.on("click", this.moveBack.bind(this));
+
+    this.shouldClick = true;
+    this.initializeEvents();
 }
 
 XSlider.events = {
@@ -167,6 +214,267 @@ XSlider.prototype.isSlideVisible = function(slide) {
     var itemStart = $(slide).offset().left;
 
     return itemStart < viewportFinish;
+};
+
+
+XSlider.prototype.getDotCount = function() {
+
+        var _ = this;
+
+        var breakPoint = 0;
+        var counter = 0;
+        var pagerQty = 0;
+        let visibleItems = this.getVisibleItems();
+        let slidesToShow = visibleItems.length;
+
+       
+        if (_.itemsCount <= _.slidesToShow) {
+             ++pagerQty;
+        } else {
+            while (breakPoint < _.itemsCount) {
+                ++pagerQty;
+                breakPoint = counter + _.options.slidesToScroll;
+                counter += _.options.slidesToScroll <= _.slidesToShow ? _.options.slidesToScroll : _.slidesToShow;
+            }
+        }
+       
+
+        return pagerQty - 1;
+
+    };
+
+XSlider.prototype.initializeEvents = function() {
+    console.log(this.$viewport);
+
+    for (var i = 0 ; i < this.$viewport.length; i++) {
+   
+
+        this.$viewport[i].addEventListener('touchstart.XSlider mousedown.XSlider', {
+            action: 'start'
+        }, this.swipeHandler());
+        this.$viewport[i].addEventListener('touchmove mousemove', {
+            action: 'move'
+        }, this.swipeHandler);
+        this.$viewport[i].addEventListener('touchend mouseup', {
+            action: 'end'
+        }, this.swipeHandler);
+        this.$viewport[i].addEventListener('touchcancel mouseleave', {
+            action: 'end'
+        }, this.swipeHandler);
+
+        this.$viewport[i].addEventListener('click', this.clickHandler);
+
+        this.$viewport[i].addEventListener('keydown', this.keyHandler);
+
+    }
+    
+    
+    // this.$slideTrack.children().addEventListener('click', this.selectHandler);
+    
+    // this.$slideTrack.addEventListener('dragstart', this.preventDefault);
+
+};
+
+XSlider.prototype.swipeDirection = function() {
+
+        var xDist, yDist, r, swipeAngle, _ = this;
+
+        xDist = _.touchObject.startX - _.touchObject.curX;
+        yDist = _.touchObject.startY - _.touchObject.curY;
+        r = Math.atan2(yDist, xDist);
+
+        swipeAngle = Math.round(r * 180 / Math.PI);
+        if (swipeAngle < 0) {
+            swipeAngle = 360 - Math.abs(swipeAngle);
+        }
+
+        if ((swipeAngle <= 45) && (swipeAngle >= 0)) {
+            return (_.options.rtl === false ? 'left' : 'right');
+        }
+        if ((swipeAngle <= 360) && (swipeAngle >= 315)) {
+            return (_.options.rtl === false ? 'left' : 'right');
+        }
+        if ((swipeAngle >= 135) && (swipeAngle <= 225)) {
+            return (_.options.rtl === false ? 'right' : 'left');
+        }
+        if (_.options.verticalSwiping === true) {
+            if ((swipeAngle >= 35) && (swipeAngle <= 135)) {
+                return 'down';
+            } else {
+                return 'up';
+            }
+        }
+
+        return 'vertical';
+
+    };
+
+    XSlider.prototype.swipeEnd = function(event) {
+
+        var _ = this,
+            itemsCount,
+            direction;
+
+        _.dragging = false;
+        _.swiping = false;
+
+        _.interrupted = false;
+        _.shouldClick = ( _.touchObject.swipeLength > 10 ) ? false : true;
+
+        if ( _.touchObject.curX === undefined ) {
+            return false;
+        }
+
+        if ( _.touchObject.swipeLength >= _.touchObject.minSwipe ) {
+
+            direction = _.swipeDirection();
+
+            switch ( direction ) {
+
+                case 'left':
+                case 'down':
+
+                    itemsCount;
+                    _.currentDirection = 0;
+
+                    break;
+
+                case 'right':
+                case 'up':
+
+                    itemsCount;
+
+                    _.currentDirection = 1;
+
+                    break;
+
+                default:
+
+
+            }
+
+            if( direction != 'vertical' ) {
+
+                _.slideHandler( itemsCount );
+                _.touchObject = {};
+                _.$slider.trigger('swipe', [_, direction ]);
+
+            }
+
+        } else {
+
+            if ( _.touchObject.startX !== _.touchObject.curX ) {
+
+                _.slideHandler( _.currentSlide );
+                _.touchObject = {};
+
+            }
+
+        }
+
+    };
+
+XSlider.prototype.swipeHandler = function(event) {
+
+    var _ = this;
+
+    switch (event.data.action) {
+
+        case 'start':
+            _.swipeStart(event);
+            break;
+
+        case 'move':
+            _.swipeMove(event);
+            break;
+
+        case 'end':
+            _.swipeEnd(event);
+            break;
+
+    }
+
+};
+
+XSlider.prototype.swipeMove = function(event) {
+
+    var _ = this,
+        edgeWasHit = false,
+        curLeft, swipeDirection, swipeLength, positionOffset, touches, verticalSwipeLength;
+
+    
+    curLeft = _.getLeft(_.currentSlide);
+
+    _.touchObject.curX = touches !== undefined ? touches[0].pageX : event.clientX;
+    _.touchObject.curY = touches !== undefined ? touches[0].pageY : event.clientY;
+
+    _.touchObject.swipeLength = Math.round(Math.sqrt(
+        Math.pow(_.touchObject.curX - _.touchObject.startX, 2)));
+
+    verticalSwipeLength = Math.round(Math.sqrt(
+        Math.pow(_.touchObject.curY - _.touchObject.startY, 2)));
+
+    swipeDirection = _.swipeDirection();
+
+    if (_.touchObject.swipeLength > 4) {
+        _.swiping = true;
+        event.preventDefault();
+    }
+
+    positionOffset = (_.options.rtl === false ? 1 : -1) * (_.touchObject.curX > _.touchObject.startX ? 1 : -1);
+    if (_.options.verticalSwiping === true) {
+        positionOffset = _.touchObject.curY > _.touchObject.startY ? 1 : -1;
+    }
+
+
+    swipeLength = _.touchObject.swipeLength;
+
+    _.touchObject.edgeHit = false;
+
+    if (_.options.infinite === false) {
+        if ((_.currentSlide === 0 && swipeDirection === 'right') || (_.currentSlide >= _.getDotCount() && swipeDirection === 'left')) {
+            swipeLength = _.touchObject.swipeLength * _.options.edgeFriction;
+            _.touchObject.edgeHit = true;
+        }
+    }
+
+    if (_.options.vertical === false) {
+        _.swipeLeft = curLeft + swipeLength * positionOffset;
+    } else {
+        _.swipeLeft = curLeft + (swipeLength * (_.$viewport.height() / _.listWidth)) * positionOffset;
+    }
+    if (_.options.verticalSwiping === true) {
+        _.swipeLeft = curLeft + swipeLength * positionOffset;
+    }
+
+    _.setCSS(_.swipeLeft);
+
+};
+
+
+XSlider.prototype.swipeStart = function(event) {
+
+    var _ = this,
+        touches;
+        let visibleItems = this.getVisibleItems();
+    let slidesToShow = visibleItems.length;
+
+    _.interrupted = true;
+
+    if (_.touchObject.fingerCount !== 1 || _.itemsCount <= _.slidesToShow) {
+        _.touchObject = {};
+        return false;
+    }
+
+    if (event.originalEvent !== undefined && event.originalEvent.touches !== undefined) {
+        touches = event.originalEvent.touches[0];
+    }
+
+    _.touchObject.startX = _.touchObject.curX = touches !== undefined ? touches.pageX : event.clientX;
+    _.touchObject.startY = _.touchObject.curY = touches !== undefined ? touches.pageY : event.clientY;
+
+    _.dragging = true;
+
 };
 /* XSLIDER END */
 
