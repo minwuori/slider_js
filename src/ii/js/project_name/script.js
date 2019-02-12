@@ -48,16 +48,16 @@ function XSlider(config, settings) {
     this.$.attr('data-slider', '');
     this.$.prop('slider', this);
 
-    let next = config.next || '.slider__right';
-    let prev = config.next || '.slider__left';
+    var next = config.next || '.slider__right';
+    var prev = config.next || '.slider__left';
     this.$next = this.$.find(next);
     this.$prev = this.$.find(prev);
 
-    let container = config.container || '.container_cards';
+    var container = config.container || '.container_cards';
     this.$container = this.$.find(container);
 
     this.itemSelector = config.item || '.product-card';
-    let $items = this.$.find(this.itemSelector);
+    var $items = this.$.find(this.itemSelector);
     $items.each(function(ind, item) {
         $(item).attr('data-slider-item', '').attr('data-index', ind+1);
     });
@@ -69,7 +69,7 @@ function XSlider(config, settings) {
 
     this.itemWidthWillChange = config.itemWidthWillChange || false;
 
-    let viewport = config.viewport || '.slider__viewport';
+    var viewport = config.viewport || '.slider__viewport';
     this.$viewport = this.$.find(viewport);
     this.viewportWidth = this.countViewportWidth();
 
@@ -79,8 +79,6 @@ function XSlider(config, settings) {
 
     this.isControlsView = true;
     this.isControlsView = this.checkControlsView();
-
-    this.$slideTrack = '.slider__container';
 
     $(window).on("resize", this.onEnvChange.bind(this));
 
@@ -116,10 +114,10 @@ XSlider.prototype.onEnvChange = function() {
 
 XSlider.prototype.checkControlsView = function() {
     if (this.itemsCount >= this.minCountNotCheckControls) return true;
-    let lastItemLeft = this.$.find(this.itemSelector).last().offset().left;
-    let sliderRight = this.$viewport.offset().left + this.viewportWidth;
-    let diff = sliderRight - lastItemLeft;
-    let isControlsView = diff < this.viewedAbsolute;
+    var lastItemLeft = this.$.find(this.itemSelector).last().offset().left;
+    var sliderRight = this.$viewport.offset().left + this.viewportWidth;
+    var diff = sliderRight - lastItemLeft;
+    var isControlsView = diff < this.viewedAbsolute;
     if (this.isControlsView && !isControlsView) this.hideControls();
     else if (!this.isControlsView && isControlsView) this.showControls();
     return isControlsView;
@@ -138,10 +136,10 @@ XSlider.prototype.moveForward = function(e) {
     if (this.onScrolled) return;
     var that = this;
     this.onScrolled = true;
-    let container = this.$container;
-    let visibleItems = this.getVisibleItems();
-    let firstSlide = container.find(visibleItems);
-    let clone = firstSlide.clone();
+    var container = this.$container;
+    var visibleItems = this.getVisibleItems();
+    var firstSlide = container.find(visibleItems);
+    var clone = firstSlide.clone();
     container
         .append(clone)
         .animate(
@@ -158,9 +156,9 @@ XSlider.prototype.moveForward = function(e) {
 
 XSlider.prototype.moveBack = function(e) {
 
-	let visibleItems = this.getVisibleItems();
-	let that = this;
-	let lastSlide = this.$container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.$container);
+	var visibleItems = this.getVisibleItems();
+	var that = this;
+	var lastSlide = this.$container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.$container);
 	this.$container
 		.css({ "left": this.$viewport.outerWidth(false) * -1 + "px" })
 		.animate(
@@ -219,52 +217,54 @@ XSlider.prototype.isSlideVisible = function(slide) {
 
 XSlider.prototype.getDotCount = function() {
 
-        var _ = this;
+    var _ = this;
 
-        var breakPoint = 0;
-        var counter = 0;
-        var pagerQty = 0;
-        let visibleItems = this.getVisibleItems();
-        let slidesToShow = visibleItems.length;
+    var breakPoint = 0;
+    var counter = 0;
+    var pagerQty = 0;
+    var visibleItems = this.getVisibleItems();
+    var slidesToShow = visibleItems.length;
 
-       
-        if (_.itemsCount <= _.slidesToShow) {
-             ++pagerQty;
-        } else {
-            while (breakPoint < _.itemsCount) {
-                ++pagerQty;
-                breakPoint = counter + _.options.slidesToScroll;
-                counter += _.options.slidesToScroll <= _.slidesToShow ? _.options.slidesToScroll : _.slidesToShow;
-            }
+   
+    if (_.itemsCount <= _.slidesToShow) {
+         ++pagerQty;
+    } else {
+        while (breakPoint < _.itemsCount) {
+            ++pagerQty;
+            breakPoint = counter + _.options.slidesToScroll;
+            counter += _.options.slidesToScroll <= _.slidesToShow ? _.options.slidesToScroll : _.slidesToShow;
         }
-       
+    }
+   
 
-        return pagerQty - 1;
+    return pagerQty - 1;
 
-    };
+};
+
+XSlider.prototype.getCoordsElement = function(element) {
+	var box = element.get(0).getBoundingClientRect();
+	return {
+		top: box.top + pageYOffset, // Возвращаем полученные координаты верхней и левой границ, добавив к ним значения текущей прокрутки //
+		left: box.left + pageXOffset // страницы .pageY(Х)Offset возвращает текущую вертикальную(горизонтальную прокрутку).//
+	};
+}
 
 XSlider.prototype.initializeEvents = function() {
-    console.log(this.$viewport);
+    var arr =[{up:'mouseup', down:'mousedown', move:'mousemove', end:'mouseleave'}, {up:'touchend', down:'touchstart', move:'touchmove', end:'touchcancel'}]; // массив для отслеживания события тач для мобильных устройств и клик для мониторов
+    var moved = false;
 
     for (var i = 0 ; i < this.$viewport.length; i++) {
    
+        for (let device of arr) {
+            this.$viewport[i].addEventListener(device.down, this.swipeStart.bind(this));
+            this.$viewport[i].addEventListener(device.move, this.swipeMove.bind(this));
+            this.$viewport[i].addEventListener(device.up, this.swipeEnd.bind(this));
+            this.$viewport[i].addEventListener(device.end, this.swipeEnd.bind(this));
+        }
+        //this.$viewport[i].addEventListener('click', this.clickHandler);
 
-        this.$viewport[i].addEventListener('touchstart.XSlider mousedown.XSlider', {
-            action: 'start'
-        }, this.swipeHandler());
-        this.$viewport[i].addEventListener('touchmove mousemove', {
-            action: 'move'
-        }, this.swipeHandler);
-        this.$viewport[i].addEventListener('touchend mouseup', {
-            action: 'end'
-        }, this.swipeHandler);
-        this.$viewport[i].addEventListener('touchcancel mouseleave', {
-            action: 'end'
-        }, this.swipeHandler);
-
-        this.$viewport[i].addEventListener('click', this.clickHandler);
-
-        this.$viewport[i].addEventListener('keydown', this.keyHandler);
+        //this.$viewport[i].addEventListener('keydown', this.keyHandler);
+        
 
     }
     
@@ -275,207 +275,58 @@ XSlider.prototype.initializeEvents = function() {
 
 };
 
-XSlider.prototype.swipeDirection = function() {
+XSlider.prototype.swipeStart = function(event) {
 
-        var xDist, yDist, r, swipeAngle, _ = this;
+    var container = this.$container;
+    var	viewport = this.$viewport;
 
-        xDist = _.touchObject.startX - _.touchObject.curX;
-        yDist = _.touchObject.startY - _.touchObject.curY;
-        r = Math.atan2(yDist, xDist);
+    var cursorX = this.value = event.pageX;// Получаем координаты клика мыши по оси Х
+    //var cursorY = this.value = event.pageY;
+    console.log('coord cursor ', cursorX);
 
-        swipeAngle = Math.round(r * 180 / Math.PI);
-        if (swipeAngle < 0) {
-            swipeAngle = 360 - Math.abs(swipeAngle);
-        }
-
-        if ((swipeAngle <= 45) && (swipeAngle >= 0)) {
-            return (_.options.rtl === false ? 'left' : 'right');
-        }
-        if ((swipeAngle <= 360) && (swipeAngle >= 315)) {
-            return (_.options.rtl === false ? 'left' : 'right');
-        }
-        if ((swipeAngle >= 135) && (swipeAngle <= 225)) {
-            return (_.options.rtl === false ? 'right' : 'left');
-        }
-        if (_.options.verticalSwiping === true) {
-            if ((swipeAngle >= 35) && (swipeAngle <= 135)) {
-                return 'down';
-            } else {
-                return 'up';
-            }
-        }
-
-        return 'vertical';
-
-    };
-
-    XSlider.prototype.swipeEnd = function(event) {
-
-        var _ = this,
-            itemsCount,
-            direction;
-
-        _.dragging = false;
-        _.swiping = false;
-
-        _.interrupted = false;
-        _.shouldClick = ( _.touchObject.swipeLength > 10 ) ? false : true;
-
-        if ( _.touchObject.curX === undefined ) {
-            return false;
-        }
-
-        if ( _.touchObject.swipeLength >= _.touchObject.minSwipe ) {
-
-            direction = _.swipeDirection();
-
-            switch ( direction ) {
-
-                case 'left':
-                case 'down':
-
-                    itemsCount;
-                    _.currentDirection = 0;
-
-                    break;
-
-                case 'right':
-                case 'up':
-
-                    itemsCount;
-
-                    _.currentDirection = 1;
-
-                    break;
-
-                default:
-
-
-            }
-
-            if( direction != 'vertical' ) {
-
-                _.slideHandler( itemsCount );
-                _.touchObject = {};
-                _.$slider.trigger('swipe', [_, direction ]);
-
-            }
-
-        } else {
-
-            if ( _.touchObject.startX !== _.touchObject.curX ) {
-
-                _.slideHandler( _.currentSlide );
-                _.touchObject = {};
-
-            }
-
-        }
-
-    };
-
-XSlider.prototype.swipeHandler = function(event) {
-
-    var _ = this;
-
-    switch (event.data.action) {
-
-        case 'start':
-            _.swipeStart(event);
-            break;
-
-        case 'move':
-            _.swipeMove(event);
-            break;
-
-        case 'end':
-            _.swipeEnd(event);
-            break;
-
-    }
+    var moved = true;
+    var sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
+    console.log(sliderCoords);
 
 };
+
 
 XSlider.prototype.swipeMove = function(event) {
 
-    var _ = this,
-        edgeWasHit = false,
-        curLeft, swipeDirection, swipeLength, positionOffset, touches, verticalSwipeLength;
+    var container = this.$container;
+        visibleItems = this.getVisibleItems();
 
-    
-    curLeft = _.getLeft(_.currentSlide);
+    var sliderControllerMaxRight = container.offsetWidth;
 
-    _.touchObject.curX = touches !== undefined ? touches[0].pageX : event.clientX;
-    _.touchObject.curY = touches !== undefined ? touches[0].pageY : event.clientY;
-
-    _.touchObject.swipeLength = Math.round(Math.sqrt(
-        Math.pow(_.touchObject.curX - _.touchObject.startX, 2)));
-
-    verticalSwipeLength = Math.round(Math.sqrt(
-        Math.pow(_.touchObject.curY - _.touchObject.startY, 2)));
-
-    swipeDirection = _.swipeDirection();
-
-    if (_.touchObject.swipeLength > 4) {
-        _.swiping = true;
-        event.preventDefault();
-    }
-
-    positionOffset = (_.options.rtl === false ? 1 : -1) * (_.touchObject.curX > _.touchObject.startX ? 1 : -1);
-    if (_.options.verticalSwiping === true) {
-        positionOffset = _.touchObject.curY > _.touchObject.startY ? 1 : -1;
-    }
-
-
-    swipeLength = _.touchObject.swipeLength;
-
-    _.touchObject.edgeHit = false;
-
-    if (_.options.infinite === false) {
-        if ((_.currentSlide === 0 && swipeDirection === 'right') || (_.currentSlide >= _.getDotCount() && swipeDirection === 'left')) {
-            swipeLength = _.touchObject.swipeLength * _.options.edgeFriction;
-            _.touchObject.edgeHit = true;
+    if (moved === true) {
+        var newPos = event.pageX - sliderCoords.left; 
+        console.log(newPos);
+        //Вычисляем кооридинату смещения, вычитая из координаты текущего положения мыши по оси Х 
+        //величину отступа, рассчитанного ранее при клике и координату левой границы полосы слайдера.
+        
+        //Если мышь ушла за пределы ширины полосы слайдера, то:
+        //1. Если мышь ушла влево
+        if (newPos < 0) {
+        	console.log("left");
+            
         }
-    }
+        //2. Если мышь ушла вправо
+        if (newPos > sliderControllerMaxRight) {
 
-    if (_.options.vertical === false) {
-        _.swipeLeft = curLeft + swipeLength * positionOffset;
-    } else {
-        _.swipeLeft = curLeft + (swipeLength * (_.$viewport.height() / _.listWidth)) * positionOffset;
+        }
+        
     }
-    if (_.options.verticalSwiping === true) {
-        _.swipeLeft = curLeft + swipeLength * positionOffset;
-    }
-
-    _.setCSS(_.swipeLeft);
 
 };
 
 
-XSlider.prototype.swipeStart = function(event) {
-
-    var _ = this,
-        touches;
-        let visibleItems = this.getVisibleItems();
-    let slidesToShow = visibleItems.length;
-
-    _.interrupted = true;
-
-    if (_.touchObject.fingerCount !== 1 || _.itemsCount <= _.slidesToShow) {
-        _.touchObject = {};
-        return false;
-    }
-
-    if (event.originalEvent !== undefined && event.originalEvent.touches !== undefined) {
-        touches = event.originalEvent.touches[0];
-    }
-
-    _.touchObject.startX = _.touchObject.curX = touches !== undefined ? touches.pageX : event.clientX;
-    _.touchObject.startY = _.touchObject.curY = touches !== undefined ? touches.pageY : event.clientY;
-
-    _.dragging = true;
-
+XSlider.prototype.swipeEnd = function(event) {
+    var moved = false
 };
+
+
+
+
 /* XSLIDER END */
 
 
