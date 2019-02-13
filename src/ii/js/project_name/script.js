@@ -86,7 +86,10 @@ function XSlider(config, settings) {
     this.$prev.on("click", this.moveBack.bind(this));
 
     this.shouldClick = true;
-    this.initializeEvents();
+    this.initializeEvents();//инициализация событий
+    this.moved = false;//флаг для свайпа
+    this.sliderCoords = null;//координаты слайдера
+    this.cursorX = null;//координаты курсора
 }
 
 XSlider.events = {
@@ -264,10 +267,8 @@ XSlider.prototype.initializeEvents = function() {
         //this.$viewport[i].addEventListener('click', this.clickHandler);
 
         //this.$viewport[i].addEventListener('keydown', this.keyHandler);
-        
 
     }
-    
     
     // this.$slideTrack.children().addEventListener('click', this.selectHandler);
     
@@ -280,13 +281,13 @@ XSlider.prototype.swipeStart = function(event) {
     var container = this.$container;
     var	viewport = this.$viewport;
 
-    var cursorX = this.value = event.pageX;// Получаем координаты клика мыши по оси Х
+    this.cursorX = this.value = event.pageX;// Получаем координаты клика мыши по оси Х
     //var cursorY = this.value = event.pageY;
-    console.log('coord cursor ', cursorX);
+    console.log('координаты клика мыши ', this.cursorX);
 
-    var moved = true;
-    var sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
-    console.log(sliderCoords);
+    this.moved = true;
+    this.sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
+    console.log('координаты полосы слайдера ', this.sliderCoords);
 
 };
 
@@ -298,21 +299,25 @@ XSlider.prototype.swipeMove = function(event) {
 
     var sliderControllerMaxRight = container.offsetWidth;
 
-    if (moved === true) {
-        var newPos = event.pageX - sliderCoords.left; 
-        console.log(newPos);
+    if (this.moved === true) {
+        var newPos = event.pageX - this.sliderCoords.left; 
+        console.log('координата смещения ', newPos);
         //Вычисляем кооридинату смещения, вычитая из координаты текущего положения мыши по оси Х 
         //величину отступа, рассчитанного ранее при клике и координату левой границы полосы слайдера.
+
+        var diffX = this.cursorX - newPos;
+        console.log(diffX);
         
-        //Если мышь ушла за пределы ширины полосы слайдера, то:
-        //1. Если мышь ушла влево
-        if (newPos < 0) {
+        // Если мышь ушла влево
+        if (newPos < this.cursorX && diffX > 350) {
         	console.log("left");
+        	this.moveBack();
             
         }
-        //2. Если мышь ушла вправо
-        if (newPos > sliderControllerMaxRight) {
-
+        // Если мышь ушла вправо
+        if (newPos > this.cursorX && diffX > -150) {
+        	console.log('right');
+        	this.moveForward();
         }
         
     }
@@ -321,7 +326,8 @@ XSlider.prototype.swipeMove = function(event) {
 
 
 XSlider.prototype.swipeEnd = function(event) {
-    var moved = false
+    this.moved = false;
+    console.log('отклик');
 };
 
 
