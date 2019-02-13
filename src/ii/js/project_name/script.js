@@ -1,49 +1,7 @@
 
 /* XSLIDER */
-function XSlider(config, settings) {
+function XSlider(config) {
     this.$ = config.element;
-    this.default = {
-        accessibility: true,
-        autoplay: false,
-        autoplaySpeed: 3000,
-        draggable: true,
-        infinite: true,
-        lazyLoad: 'ondemand',
-        swipe: true,
-        swipeToSlide: true,
-        touchMove: true,
-        touchThreshold: 5,
-        verticalSwiping: true,
-    };
-
-    this.initials = {
-        animating: false,
-        dragging: false,
-        autoPlayTimer: null,
-        currentDirection: 0,
-        currentLeft: null,
-        currentSlide: 0,
-        direction: 1,
-        $dots: null,
-        listWidth: null,
-        loadIndex: 0,
-        $nextArrow: null,
-        $prevArrow: null,
-        itemsCount: null,
-        slideWidth: null,
-        $slideTrack: null,
-        $slides: null,
-        sliding: false,
-        slideOffset: 0,
-        swipeLeft: null,
-        swiping: false,
-        $viewport: null,
-        touchObject: {},        
-    };
-
-    Object.assign(this, this.initials);
-
-    this.options = Object.assign({}, this.defaults, settings);
 
     this.$.attr('data-slider', '');
     this.$.prop('slider', this);
@@ -86,7 +44,7 @@ function XSlider(config, settings) {
     this.$prev.on("click", this.moveBack.bind(this));
 
     this.shouldClick = true;
-    this.initializeEvents();//инициализация событий
+    this.initializeEvents();//инициализация событий touch & mouse
     this.moved = false;//флаг для свайпа
     this.sliderCoords = null;//координаты слайдера
     this.cursorX = null;//координаты курсора
@@ -168,7 +126,7 @@ XSlider.prototype.moveBack = function(e) {
 			{ left: "0px" },
 			350,
 			that.endSlide.bind(that)
-		)
+		);
 	// console.log(this.itemsCount);
 	// console.log(visibleItems.length);
 	// console.log(this.$viewport.outerWidth(false));
@@ -253,8 +211,10 @@ XSlider.prototype.getCoordsElement = function(element) {
 }
 
 XSlider.prototype.initializeEvents = function() {
-    var arr =[{up:'mouseup', down:'mousedown', move:'mousemove', end:'mouseleave'}, {up:'touchend', down:'touchstart', move:'touchmove', end:'touchcancel'}]; // массив для отслеживания события тач для мобильных устройств и клик для мониторов
-    var moved = false;
+	// массив для отслеживания события тач для мобильных устройств и клик для мониторов
+    var arr = [{up:'mouseup', down:'mousedown', move:'mousemove', end:'mouseleave'}, 
+    		{up:'touchend', down:'touchstart', move:'touchmove', end:'touchcancel'},
+    		{up:'dragend', down:'dragstart', move:'dragenter', end:'dragleave'}]; 
 
     for (var i = 0 ; i < this.$viewport.length; i++) {
    
@@ -264,10 +224,10 @@ XSlider.prototype.initializeEvents = function() {
             this.$viewport[i].addEventListener(device.up, this.swipeEnd.bind(this));
             this.$viewport[i].addEventListener(device.end, this.swipeEnd.bind(this));
         }
+
         //this.$viewport[i].addEventListener('click', this.clickHandler);
 
         //this.$viewport[i].addEventListener('keydown', this.keyHandler);
-
     }
     
     // this.$slideTrack.children().addEventListener('click', this.selectHandler);
@@ -288,23 +248,18 @@ XSlider.prototype.swipeStart = function(event) {
     this.moved = true;
     this.sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
     console.log('координаты полосы слайдера ', this.sliderCoords);
-
 };
 
 
 XSlider.prototype.swipeMove = function(event) {
-
-    var container = this.$container;
-        visibleItems = this.getVisibleItems();
-
-    var sliderControllerMaxRight = container.offsetWidth;
-
     if (this.moved === true) {
+    	//Вычисляем кооридинату смещения, вычитая из координаты текущего положения мыши по оси Х 
+        //величину отступа, рассчитанного ранее при клике и координату левой границы полосы слайдера. 
+
         var newPos = event.pageX - this.sliderCoords.left; 
         console.log('координата смещения ', newPos);
-        //Вычисляем кооридинату смещения, вычитая из координаты текущего положения мыши по оси Х 
-        //величину отступа, рассчитанного ранее при клике и координату левой границы полосы слайдера.
-
+        
+        //разница между начальным и новым положением курсора
         var diffX = this.cursorX - newPos;
         console.log(diffX);
         
@@ -327,7 +282,7 @@ XSlider.prototype.swipeMove = function(event) {
 
 XSlider.prototype.swipeEnd = function(event) {
     this.moved = false;
-    console.log('отклик');
+    console.log('stop');
 };
 
 
