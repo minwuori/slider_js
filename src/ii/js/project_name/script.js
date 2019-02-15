@@ -1,35 +1,65 @@
 
 /* XSLIDER */
 function XSlider(config) {
-    this.$ = config.element;
 
-    this.$.attr('data-slider', '');
-    this.$.prop('slider', this);
+	var XSliderHelper = {
+	    selectors: {
+	            next: '.slider__right',
+	            prev: '.slider__left',
+	            container: '.container_cards',
+	            slide: '.product-card',
+	            viewport: '.slider__viewport'
+	        }
+	};
 
-    var next = config.next || '.slider__right';
-    var prev = config.next || '.slider__left';
-    this.$next = this.$.find(next);
-    this.$prev = this.$.find(prev);
+	this.slider = config.element;
 
-    var container = config.container || '.container_cards';
-    this.$container = this.$.find(container);
+    this.next = this.slider.querySelector(XSliderHelper.selectors.next);//стрелка вперед
+    this.prev = this.slider.querySelector(XSliderHelper.selectors.prev);//стрелка назад
 
-    this.itemSelector = config.item || '.product-card';
-    var $items = this.$.find(this.itemSelector);
-    $items.each(function(ind, item) {
-        $(item).attr('data-slider-item', '').attr('data-index', ind+1);
+    this.container = this.slider.querySelector(XSliderHelper.selectors.container);//контейнер
+
+    this.slides = this.slider.querySelectorAll(XSliderHelper.selectors.slide);//эл-ты слайдера
+
+    Array.prototype.forEach.call(this.slides, function (slide, index){//установить каждому слайду атрибуты
+        slide.setAttribute('data-slider-item', '');
+        slide.setAttribute('data-index', index++);
     });
-    this.itemsCount = $items.length;
-    this.itemWidth = this.countItemWidth();
+
+    this.itemsCount = this.slides.length;//кол-во слайдов
+    
+
+    // this.slider.attr('data-slider', '');
+    // this.slider.prop('slider', this);
+
+    // var next = config.next || '.slider__right';
+    // var prev = config.next || '.slider__left';
+    // this.$next = this.slider.find(next);
+    // this.$prev = this.slider.find(prev);
+
+    // var container = config.container || '.container_cards';
+    // this.$container = this.slider.find(container);
+
+    // this.itemSelector = config.item || '.product-card';
+    // var $items = this.slider.find(this.itemSelector);
+    // $items.each(function(ind, item) {
+    //     $(item).attr('data-slider-item', '').attr('data-index', ind+1);
+    // });
+    // this.itemsCount = $items.length;
+    //this.itemWidth = this.countItemWidth();//ширина слайда
+    this.itemWidth = this.countItemWidth();//ширина слайда
 
     this.viewedPercentage = config.viewedPercentage || 0.95;
     this.viewedAbsolute = this.itemWidth * this.viewedPercentage;
 
     this.itemWidthWillChange = config.itemWidthWillChange || false;
 
-    var viewport = config.viewport || '.slider__viewport';
-    this.$viewport = this.$.find(viewport);
-    this.viewportWidth = this.countViewportWidth();
+    //var viewport = config.viewport || '.slider__viewport';
+    //this.$viewport = this.slider.find(viewport);
+    this.viewport = this.slider.querySelector(XSliderHelper.selectors.viewport);//вьюпорт
+
+    //this.viewportWidth = this.countViewportWidth();
+    this.viewportWidth = this.countViewportWidth();//ширина вьюпорта
 
     this.onScrolled = false;
 
@@ -38,16 +68,21 @@ function XSlider(config) {
     this.isControlsView = true;
     this.isControlsView = this.checkControlsView();
 
-    $(window).on("resize", this.onEnvChange.bind(this));
+    window.addEventListener("resize", this.onEnvChange.bind(this));
 
-    this.$next.on("click", this.moveForward.bind(this));
-    this.$prev.on("click", this.moveBack.bind(this));
+    this.next.addEventListener("click", this.moveForward.bind(this));
+    this.prev.addEventListener("click", this.moveBack.bind(this));
 
     this.shouldClick = true;
     this.initializeEvents();//инициализация событий touch & mouse
     this.moved = false;//флаг для свайпа
     this.sliderCoords = null;//координаты слайдера
     this.cursorX = null;//координаты курсора
+
+    this.visibleItems = this.getVisibleItems();//карточки видимые во вьюпорте
+
+    this.pos = null;
+
 }
 
 XSlider.events = {
@@ -55,13 +90,28 @@ XSlider.events = {
 }
 
 XSlider.prototype.countViewportWidth = function() {
-    return this.$viewport.outerWidth(false);
+	var styles = window.getComputedStyle(this.viewport);//получить значение свойства стиля вьюпорта
+	var margin = parseFloat(styles['marginLeft']) +
+				 parseFloat(styles['marginRight']);//преобразовать в число полученное свойство
+
+	var itemWidth = Math.ceil(this.viewport.offsetWidth + margin);
+	return itemWidth;//вернуть значение ширины вьюпорта с внешними отступами
+    return this.viewport.outerWidth(false);
 }
 
 XSlider.prototype.countItemWidth = function() {
-    if (!this.itemWidth || this.itemWidthWillChange)
-        return this.$.find(this.itemSelector).first().outerWidth(false);
-    else return this.itemWidth;
+    if (!this.itemWidth || this.itemWidthWillChange) {
+    	
+		var styles = window.getComputedStyle(this.slides[0]);//получить значение свойства стиля слайда
+		var margin = parseFloat(styles['marginLeft']) +
+					 parseFloat(styles['marginRight']);//преобразовать в число полученное свойство
+
+		var itemWidth = Math.ceil(this.slides[0].offsetWidth + margin);
+		return itemWidth;//вернуть значение ширины слайда с внешними отступами
+        //return this.slider.find(this.itemSelector).first().outerWidth(false);
+    } else {
+    	return this.itemWidth;
+    }
 }
 
 XSlider.prototype.onEnvChange = function() {
@@ -75,8 +125,8 @@ XSlider.prototype.onEnvChange = function() {
 
 XSlider.prototype.checkControlsView = function() {
     if (this.itemsCount >= this.minCountNotCheckControls) return true;
-    var lastItemLeft = this.$.find(this.itemSelector).last().offset().left;
-    var sliderRight = this.$viewport.offset().left + this.viewportWidth;
+    var lastItemLeft = this.slider.find(this.itemSelector).last().offset().left;
+    var sliderRight = this.viewport.offset().left + this.viewportWidth;
     var diff = sliderRight - lastItemLeft;
     var isControlsView = diff < this.viewedAbsolute;
     if (this.isControlsView && !isControlsView) this.hideControls();
@@ -85,11 +135,11 @@ XSlider.prototype.checkControlsView = function() {
 };
 
 XSlider.prototype.hideControls = function() {
-    this.$.attr('data-hide-controls', '');
+    this.slider.setAttribute('data-hide-controls', '');
 }
 
 XSlider.prototype.showControls = function() {
-    this.$.removeAttr('data-hide-controls');
+    this.slider.removeAttr('data-hide-controls');
 }
 
 
@@ -97,62 +147,113 @@ XSlider.prototype.moveForward = function(e) {
     if (this.onScrolled) return;
     var that = this;
     this.onScrolled = true;
-    var container = this.$container;
-    var visibleItems = this.getVisibleItems();
-    var firstSlide = container.find(visibleItems);
-    var clone = firstSlide.clone();
-    container
-        .append(clone)
-        .animate(
-            { left: this.$viewport.outerWidth(false) * -1 + "px"},
-            350,
-            function() {
-                firstSlide.detach();
-                container.css( { "left": "0px" });
-                that.endSlide();
-            }
-        );
+    //var container = this.container;
+    //var visibleItems = this.getVisibleItems();
+    //var firstSlide = visibleItems;
+    // var clone = firstSlide.clone();
+    // container
+    //     .append(clone)
+    //     .animate(
+    //         { left: this.viewport.outerWidth(false) * -1 + "px"},
+    //         350,
+    //         function() {
+    //             firstSlide.detach();
+    //             container.css( { "left": "0px" });
+    //             that.endSlide();
+    //         }
+    //     );
+
+	this.pos++;
+
+	if (this.pos > this.slides.length / this.visibleItems.length - 1) {
+		var slides = this.container.children;
+		//this.container.style.transition = null;
+
+		for (var i = 0; i < this.visibleItems.length; i++) {
+			var cloneElem = slides[i].cloneNode(true);
+			console.log(cloneElem);
+			this.container.appendChild(cloneElem);
+			this.container.removeChild(slides[i]);
+
+		}
+
+		//slides[0].offsetParent; //запрашивает какую-нибуть метрику dom для reflow
+	 	this.pos--;
+		console.log(this.pos);
+		this.container.style.left = -(this.pos - 2) * this.itemWidth * this.visibleItems.length + 'px';
+		this.container.style.transition = 'left 0.6s ease-in-out';
+
+
+	} else {
+
+		this.container.style.left = -this.itemWidth * this.visibleItems.length * this.pos + 'px';
+		console.log(-this.itemWidth * this.visibleItems.length * this.pos);
+
+		this.container.style.transition = 'left 0.6s ease-in-out';
+	}
+
+	that.endSlide();
 
 };
 
 XSlider.prototype.moveBack = function(e) {
 
-	var visibleItems = this.getVisibleItems();
 	var that = this;
-	var lastSlide = this.$container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.$container);
-	this.$container
-		.css({ "left": this.$viewport.outerWidth(false) * -1 + "px" })
-		.animate(
-			{ left: "0px" },
-			350,
-			that.endSlide.bind(that)
-		);
-	// console.log(this.itemsCount);
-	// console.log(visibleItems.length);
-	// console.log(this.$viewport.outerWidth(false));
-	// console.log(visibleItems);
+	//var lastSlide = this.container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.container);
+	//this.container
+	// 	.css({ "left": this.viewport.outerWidth(false) * -1 + "px" })
+	// 	.animate(
+	// 		{ left: "0px" },
+	// 		350,
+	// 		that.endSlide.bind(that);
+	// 	);
+    	
+	
+	this.pos--;
 
+	if (this.pos < 0) {
+		var slides = this.container.children;
+		this.container.style.transition = null;
+		this.container.style.left = -(this.pos + 2) * this.viewportWidth + 'px';
+
+		for (var i = 0; i < this.visibleItems.length; i++) {
+			this.container.insertBefore(slides[this.slides.length - 1], slides[0]);
+		}
+
+		slides[0].offsetParent; 
+		this.pos++;
+
+	}
+
+		this.container.style.transition = 'left 0.6s ease-in-out';
+		this.container.style.left = -this.viewportWidth * this.pos + 'px';
+		
+		that.endSlide.bind(that);
 };
 
 XSlider.prototype.endSlide = function() {
     this.onScrolled = false;
-    this.$.trigger(XSlider.events.slideEnd)
+    // this.slider.trigger(XSlider.events.slideEnd)
+
+    var event = document.createEvent('Event');
+	event.initEvent(XSlider.events.slideEnd, true, true);
+	this.slider.dispatchEvent(event);
 
     //viewer.checkSelector('.slider .product-card');
 };
 
 XSlider.prototype.getVisibleItems = function() {
-    var viewportStart = this.$viewport.offset().left;
+    var viewportStart = parseFloat(this.getCoordsElement(this.viewport).left);
     var viewportFinish = viewportStart + this.viewportWidth;
-
 
     var visible = [];
 
-    var slides = this.$container.find(this.itemSelector);
+    //var slides = this.container.querySelectorAll(XSliderHelper.selectors.slide);
 
     for (var i = 0; i < this.itemsCount; i++) {
-        var slide = slides[i];
-        var itemStart = $(slide).offset().left;
+        var slide = this.slides[i];
+        var itemStart = parseFloat(this.getCoordsElement(this.slides[i]).left);
+
         var itemFinish = itemStart + this.itemWidth;
         if (itemStart < viewportFinish) {
             visible.push(slide);
@@ -161,49 +262,23 @@ XSlider.prototype.getVisibleItems = function() {
             break;
         }
     }
-
     return visible;
 
 };
 
 XSlider.prototype.isSlideVisible = function(slide) {
-    var viewportStart = this.$viewport.offset().left;
+    var viewportStart = parseFloat(this.getCoordsElement(this.viewport).left);
     var viewportFinish = viewportStart + this.viewportWidth;
 
-    var itemStart = $(slide).offset().left;
+    var itemStart = parseFloat(this.getCoordsElement(this.slides[i]).left);
 
     return itemStart < viewportFinish;
 };
 
 
-XSlider.prototype.getDotCount = function() {
-
-    var _ = this;
-
-    var breakPoint = 0;
-    var counter = 0;
-    var pagerQty = 0;
-    var visibleItems = this.getVisibleItems();
-    var slidesToShow = visibleItems.length;
-
-   
-    if (_.itemsCount <= _.slidesToShow) {
-         ++pagerQty;
-    } else {
-        while (breakPoint < _.itemsCount) {
-            ++pagerQty;
-            breakPoint = counter + _.options.slidesToScroll;
-            counter += _.options.slidesToScroll <= _.slidesToShow ? _.options.slidesToScroll : _.slidesToShow;
-        }
-    }
-   
-
-    return pagerQty - 1;
-
-};
 
 XSlider.prototype.getCoordsElement = function(element) {
-	var box = element.get(0).getBoundingClientRect();
+	var box = element.getBoundingClientRect();
 	return {
 		top: box.top + pageYOffset, // Возвращаем полученные координаты верхней и левой границ, добавив к ним значения текущей прокрутки //
 		left: box.left + pageXOffset // страницы .pageY(Х)Offset возвращает текущую вертикальную(горизонтальную прокрутку).//
@@ -216,18 +291,18 @@ XSlider.prototype.initializeEvents = function() {
     		{up:'touchend', down:'touchstart', move:'touchmove', end:'touchcancel'},
     		{up:'dragend', down:'dragstart', move:'dragenter', end:'dragleave'}]; 
 
-    for (var i = 0 ; i < this.$viewport.length; i++) {
+    for (var i = 0 ; i < this.viewport.length; i++) {
    
         for (let device of arr) {
-            this.$viewport[i].addEventListener(device.down, this.swipeStart.bind(this));
-            this.$viewport[i].addEventListener(device.move, this.swipeMove.bind(this));
-            this.$viewport[i].addEventListener(device.up, this.swipeEnd.bind(this));
-            this.$viewport[i].addEventListener(device.end, this.swipeEnd.bind(this));
+            this.viewport[i].addEventListener(device.down, this.swipeStart.bind(this));
+            this.viewport[i].addEventListener(device.move, this.swipeMove.bind(this));
+            this.viewport[i].addEventListener(device.up, this.swipeEnd.bind(this));
+            this.viewport[i].addEventListener(device.end, this.swipeEnd.bind(this));
         }
 
-        //this.$viewport[i].addEventListener('click', this.clickHandler);
+        //this.viewport[i].addEventListener('click', this.clickHandler);
 
-        //this.$viewport[i].addEventListener('keydown', this.keyHandler);
+        //this.viewport[i].addEventListener('keydown', this.keyHandler);
     }
     
     // this.$slideTrack.children().addEventListener('click', this.selectHandler);
@@ -237,9 +312,11 @@ XSlider.prototype.initializeEvents = function() {
 };
 
 XSlider.prototype.swipeStart = function(event) {
+	event.preventDefault();
+	event.stopPropagation();
 
-    var container = this.$container;
-    var	viewport = this.$viewport;
+    var container = this.container;
+    var	viewport = this.viewport;
 
     this.cursorX = this.value = event.pageX;// Получаем координаты клика мыши по оси Х
     //var cursorY = this.value = event.pageY;
@@ -252,6 +329,8 @@ XSlider.prototype.swipeStart = function(event) {
 
 
 XSlider.prototype.swipeMove = function(event) {
+	event.preventDefault();
+	event.stopPropagation();
     if (this.moved === true) {
     	//Вычисляем кооридинату смещения, вычитая из координаты текущего положения мыши по оси Х 
         //величину отступа, рассчитанного ранее при клике и координату левой границы полосы слайдера. 
@@ -662,12 +741,11 @@ function lazyUpdate()  {
 
 
     /* SLIDER */
-    var cardWidth = 240;
-    var calousel = '[data-carousel]';
-    $(calousel).each(function(i, element){
+    var carousels = document.querySelectorAll('[data-carousel]');
+    carousels.forEach(function(item, i){
 
         new XSlider({
-            element: $(this)
+            element: item
         });
     });
     /* END SLIDER */
