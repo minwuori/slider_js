@@ -46,8 +46,8 @@ function XSlider(config) {
     //     $(item).attr('data-slider-item', '').attr('data-index', ind+1);
     // });
     // this.itemsCount = $items.length;
-    //this.itemWidth = this.countItemWidth();//ширина слайда
-    this.itemWidth = this.countItemWidth();//ширина слайда
+    //this.itemWidth = this.countItemWidth();//ширина карточки
+    this.itemWidth = this.countItemWidth();//ширина карточки
 
     this.viewedPercentage = config.viewedPercentage || 0.95;
     this.viewedAbsolute = this.itemWidth * this.viewedPercentage;
@@ -90,23 +90,23 @@ XSlider.events = {
 }
 
 XSlider.prototype.countViewportWidth = function() {
-	var styles = window.getComputedStyle(this.viewport);//получить значение свойства стиля вьюпорта
+	var styles = window.getComputedStyle(this.viewport);//получить значение свойства стиля карточки
 	var margin = parseFloat(styles['marginLeft']) +
 				 parseFloat(styles['marginRight']);//преобразовать в число полученное свойство
 
-	var itemWidth = Math.ceil(this.viewport.offsetWidth + margin);
-	return itemWidth;//вернуть значение ширины вьюпорта с внешними отступами
-    return this.viewport.outerWidth(false);
+	var viewportWidth = Math.ceil(this.viewport.offsetWidth + margin);
+	return viewportWidth;//вернуть значение ширины вьюпорта с внешними отступами
+    //return this.viewport.outerWidth(false);
 }
 
 XSlider.prototype.countItemWidth = function() {
     if (!this.itemWidth || this.itemWidthWillChange) {
     	
-		var styles = window.getComputedStyle(this.slides[0]);//получить значение свойства стиля слайда
+		var styles = window.getComputedStyle(this.slides[0]);//получить значение свойства стиля карточки
 		var margin = parseFloat(styles['marginLeft']) +
 					 parseFloat(styles['marginRight']);//преобразовать в число полученное свойство
-
 		var itemWidth = Math.ceil(this.slides[0].offsetWidth + margin);
+
 		return itemWidth;//вернуть значение ширины слайда с внешними отступами
         //return this.slider.find(this.itemSelector).first().outerWidth(false);
     } else {
@@ -125,8 +125,11 @@ XSlider.prototype.onEnvChange = function() {
 
 XSlider.prototype.checkControlsView = function() {
     if (this.itemsCount >= this.minCountNotCheckControls) return true;
-    var lastItemLeft = this.slider.find(this.itemSelector).last().offset().left;
-    var sliderRight = this.viewport.offset().left + this.viewportWidth;
+    //var lastItemLeft = this.slider.find(this.itemSelector).last().offset().left;
+    var lastItem = this.slides[this.slides.length - 1];
+    var lastItemLeft = parseFloat(this.getCoordsElement(lastItem).left);
+
+    var sliderRight =  parseFloat(this.getCoordsElement(this.viewport).left) + this.viewportWidth;
     var diff = sliderRight - lastItemLeft;
     var isControlsView = diff < this.viewedAbsolute;
     if (this.isControlsView && !isControlsView) this.hideControls();
@@ -139,15 +142,15 @@ XSlider.prototype.hideControls = function() {
 }
 
 XSlider.prototype.showControls = function() {
-    this.slider.removeAttr('data-hide-controls');
+    this.slider.removeAttribute('data-hide-controls');
 }
 
 
-XSlider.prototype.moveForward = function(e) {
+XSlider.prototype.moveForward = function(evt) {
     if (this.onScrolled) return;
     var that = this;
     this.onScrolled = true;
-    //var container = this.container;
+    var container = this.container;
     //var visibleItems = this.getVisibleItems();
     //var firstSlide = visibleItems;
     // var clone = firstSlide.clone();
@@ -163,34 +166,43 @@ XSlider.prototype.moveForward = function(e) {
     //         }
     //     );
 
-	this.pos++;
+	//this.pos++;
 
-	if (this.pos > this.slides.length / this.visibleItems.length - 1) {
-		var slides = this.container.children;
-		//this.container.style.transition = null;
+	//if (this.pos > this.slides.length / this.visibleItems.length - 1) {
+	//if (this.pos > 0) {
+		container.style.transition = null;
+		//this.container.style.left = 0 + 'px';
+		container.style.left = this.itemWidth * this.visibleItems.length + 'px';
+
+		var slides = container.children;
 
 		for (var i = 0; i < this.visibleItems.length; i++) {
-			var cloneElem = slides[i].cloneNode(true);
-			console.log(cloneElem);
-			this.container.appendChild(cloneElem);
-			this.container.removeChild(slides[i]);
-
+			var cloneElem = slides[0].cloneNode(true);
+			
+			container.appendChild(cloneElem);
+			container.removeChild(slides[0]);
+			
+			
 		}
 
 		//slides[0].offsetParent; //запрашивает какую-нибуть метрику dom для reflow
-	 	this.pos--;
-		console.log(this.pos);
-		this.container.style.left = -(this.pos - 2) * this.itemWidth * this.visibleItems.length + 'px';
-		this.container.style.transition = 'left 0.6s ease-in-out';
+	 	//this.pos--;
+		//console.log('pos ', this.pos);
+		//this.container.style.left = -(this.pos - 2) * this.itemWidth * this.visibleItems.length + 'px';
+		//this.container.style.transition = 'left 0.6s ease-in-out';
 
 
-	} else {
+	//} else {
+		requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
+		    requestAnimationFrame(function(){ //предыдущий reflow рассчитал новый dom элемент можно делать анимацию.
+				container.style.transition = 'left 0.6s ease-in-out';
+				container.style.left = 0 + 'px';
+				//this.container.style.left = -1 * this.itemWidth * this.visibleItems.length + 'px';
+		    })
+		});
+		
 
-		this.container.style.left = -this.itemWidth * this.visibleItems.length * this.pos + 'px';
-		console.log(-this.itemWidth * this.visibleItems.length * this.pos);
-
-		this.container.style.transition = 'left 0.6s ease-in-out';
-	}
+	//}
 
 	that.endSlide();
 
@@ -199,6 +211,8 @@ XSlider.prototype.moveForward = function(e) {
 XSlider.prototype.moveBack = function(e) {
 
 	var that = this;
+    var container = this.container;
+
 	//var lastSlide = this.container.find(this.itemSelector).slice(-visibleItems.length).detach().prependTo(this.container);
 	//this.container
 	// 	.css({ "left": this.viewport.outerWidth(false) * -1 + "px" })
@@ -209,24 +223,29 @@ XSlider.prototype.moveBack = function(e) {
 	// 	);
     	
 	
-	this.pos--;
+	//this.pos--;
 
-	if (this.pos < 0) {
+	//if (this.pos < 0) {
 		var slides = this.container.children;
-		this.container.style.transition = null;
-		this.container.style.left = -(this.pos + 2) * this.viewportWidth + 'px';
+		container.style.transition = null;
+		container.style.left = -1 * this.itemWidth * this.visibleItems.length + 'px';
 
 		for (var i = 0; i < this.visibleItems.length; i++) {
-			this.container.insertBefore(slides[this.slides.length - 1], slides[0]);
+			container.insertBefore(slides[this.slides.length - 1], slides[0]);
 		}
 
-		slides[0].offsetParent; 
-		this.pos++;
+		//slides[0].offsetParent; 
+		//this.pos++;
 
-	}
-
-		this.container.style.transition = 'left 0.6s ease-in-out';
-		this.container.style.left = -this.viewportWidth * this.pos + 'px';
+//}	
+		requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
+		    requestAnimationFrame(function(){ //предыдущий reflow рассчитал новый dom элемент можно делать анимацию.
+		      container.style.transition = 'left 0.6s ease-in-out';
+				//this.container.style.left = -this.itemWidth * this.visibleItems.length * this.pos + 'px';
+				container.style.left = 0 + 'px';
+		    })
+		});
+		
 		
 		that.endSlide.bind(that);
 };
@@ -243,6 +262,7 @@ XSlider.prototype.endSlide = function() {
 };
 
 XSlider.prototype.getVisibleItems = function() {
+	//var viewportStart = this.$viewport.offset().left;
     var viewportStart = parseFloat(this.getCoordsElement(this.viewport).left);
     var viewportFinish = viewportStart + this.viewportWidth;
 
@@ -291,19 +311,23 @@ XSlider.prototype.initializeEvents = function() {
     		{up:'touchend', down:'touchstart', move:'touchmove', end:'touchcancel'},
     		{up:'dragend', down:'dragstart', move:'dragenter', end:'dragleave'}]; 
 
-    for (var i = 0 ; i < this.viewport.length; i++) {
+    //for (var i = 0 ; i < this.viewport.length; i++) {
    
         for (let device of arr) {
-            this.viewport[i].addEventListener(device.down, this.swipeStart.bind(this));
-            this.viewport[i].addEventListener(device.move, this.swipeMove.bind(this));
-            this.viewport[i].addEventListener(device.up, this.swipeEnd.bind(this));
-            this.viewport[i].addEventListener(device.end, this.swipeEnd.bind(this));
+            //this.viewport[i].addEventListener(device.down, this.swipeStart.bind(this));
+            //this.viewport[i].addEventListener(device.move, this.swipeMove.bind(this));
+            //this.viewport[i].addEventListener(device.up, this.swipeEnd.bind(this));
+            //this.viewport[i].addEventListener(device.end, this.swipeEnd.bind(this));
+            this.viewport.addEventListener(device.down, this.swipeStart.bind(this));
+            this.viewport.addEventListener(device.move, this.swipeMove.bind(this));
+            this.viewport.addEventListener(device.up, this.swipeEnd.bind(this));
+            this.viewport.addEventListener(device.end, this.swipeEnd.bind(this));
         }
 
         //this.viewport[i].addEventListener('click', this.clickHandler);
 
         //this.viewport[i].addEventListener('keydown', this.keyHandler);
-    }
+    //}
     
     // this.$slideTrack.children().addEventListener('click', this.selectHandler);
     
