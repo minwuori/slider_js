@@ -18,6 +18,7 @@ function XSlider(config) {
     this.prev = this.slider.querySelector(XSliderHelper.selectors.prev);//стрелка назад
 
     this.container = this.slider.querySelector(XSliderHelper.selectors.container);//контейнер
+    this.container.style.left = 0;
 
     this.slides = this.slider.querySelectorAll(XSliderHelper.selectors.slide);//эл-ты слайдера
 
@@ -81,7 +82,7 @@ function XSlider(config) {
 
     this.visibleItems = this.getVisibleItems();//карточки видимые во вьюпорте
 
-    this.pos = null;
+    this.transitionSpeed = 600;
 
 }
 
@@ -170,21 +171,33 @@ XSlider.prototype.moveForward = function(evt) {
 
 	//if (this.pos > this.slides.length / this.visibleItems.length - 1) {
 	//if (this.pos > 0) {
-		container.style.transition = null;
-		//this.container.style.left = 0 + 'px';
-		container.style.left = this.itemWidth * this.visibleItems.length + 'px';
+		//container.style.transition = null;
+		//container.style.left = this.itemWidth * this.visibleItems.length + 'px';
 
 		var slides = container.children;
 
 		for (var i = 0; i < this.visibleItems.length; i++) {
-			var cloneElem = slides[0].cloneNode(true);
+			var cloneElem = slides[i].cloneNode(true);
 			
 			container.appendChild(cloneElem);
-			container.removeChild(slides[0]);
+			//container.removeChild(slides[0]);
 			
 			
 		}
+        container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
+        container.style.left = -that.itemWidth * that.visibleItems.length + 'px';
+        
 
+        setTimeout(function(){
+            for (var i = 0; i < that.visibleItems.length; i++) {
+                container.removeChild(slides[0]);
+            }
+            container.style.transition = null;
+            container.style.left = 0;
+        }, this.transitionSpeed)
+
+
+       
 		//slides[0].offsetParent; //запрашивает какую-нибуть метрику dom для reflow
 	 	//this.pos--;
 		//console.log('pos ', this.pos);
@@ -193,13 +206,13 @@ XSlider.prototype.moveForward = function(evt) {
 
 
 	//} else {
-		requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
-		    requestAnimationFrame(function(){ //предыдущий reflow рассчитал новый dom элемент можно делать анимацию.
-				container.style.transition = 'left 0.6s ease-in-out';
-				container.style.left = 0 + 'px';
-				//this.container.style.left = -1 * this.itemWidth * this.visibleItems.length + 'px';
-		    })
-		});
+		// requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
+		//     requestAnimationFrame(function(){ //предыдущий reflow рассчитал новый dom элемент можно делать анимацию.
+		// 		container.style.transition = 'left 0.6s ease-in-out';
+		// 		container.style.left = 0 + 'px';
+		// 		//this.container.style.left = -1 * this.itemWidth * this.visibleItems.length + 'px';
+		//     })
+		// });
 		
 
 	//}
@@ -239,11 +252,9 @@ XSlider.prototype.moveBack = function(e) {
 
 //}	
 		requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
-		    requestAnimationFrame(function(){ //предыдущий reflow рассчитал новый dom элемент можно делать анимацию.
-		      container.style.transition = 'left 0.6s ease-in-out';
-				//this.container.style.left = -this.itemWidth * this.visibleItems.length * this.pos + 'px';
-				container.style.left = 0 + 'px';
-		    })
+            container.style.transition = 'left ' + that.transitionSpeed +'ms ease-in-out';
+			//this.container.style.left = -this.itemWidth * this.visibleItems.length * this.pos + 'px';
+			container.style.left = 0 + 'px';
 		});
 		
 		
@@ -290,7 +301,7 @@ XSlider.prototype.isSlideVisible = function(slide) {
     var viewportStart = parseFloat(this.getCoordsElement(this.viewport).left);
     var viewportFinish = viewportStart + this.viewportWidth;
 
-    var itemStart = parseFloat(this.getCoordsElement(this.slides[i]).left);
+    var itemStart = parseFloat(this.getCoordsElement(slide).left);
 
     return itemStart < viewportFinish;
 };
@@ -336,44 +347,45 @@ XSlider.prototype.initializeEvents = function() {
 };
 
 XSlider.prototype.swipeStart = function(event) {
-	event.preventDefault();
-	event.stopPropagation();
+	//event.preventDefault();
+	//event.stopPropagation();
 
-    var container = this.container;
-    var	viewport = this.viewport;
+   // var container = this.container;
+ //   var	viewport = this.viewport;
 
     this.cursorX = this.value = event.pageX;// Получаем координаты клика мыши по оси Х
     //var cursorY = this.value = event.pageY;
     console.log('координаты клика мыши ', this.cursorX);
 
     this.moved = true;
-    this.sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
-    console.log('координаты полосы слайдера ', this.sliderCoords);
+   // this.sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
+    //console.log('координаты полосы слайдера ', this.sliderCoords);
 };
 
 
 XSlider.prototype.swipeMove = function(event) {
-	event.preventDefault();
-	event.stopPropagation();
+	//event.preventDefault();
+	//event.stopPropagation();
     if (this.moved === true) {
     	//Вычисляем кооридинату смещения, вычитая из координаты текущего положения мыши по оси Х 
         //величину отступа, рассчитанного ранее при клике и координату левой границы полосы слайдера. 
 
-        var newPos = event.pageX - this.sliderCoords.left; 
-        console.log('координата смещения ', newPos);
+        //var newPos = event.pageX - this.sliderCoords.left; 
+        //console.log('координата смещения ', newPos);
         
         //разница между начальным и новым положением курсора
-        var diffX = this.cursorX - newPos;
+        var diffX = this.cursorX - event.pageX;
         console.log(diffX);
+        console.log('b', this.cursorX - event.pageX);
         
         // Если мышь ушла влево
-        if (newPos < this.cursorX && diffX > 350) {
+        if (event.pageX < this.cursorX && diffX > 350) {
         	console.log("left");
         	this.moveBack();
             
         }
         // Если мышь ушла вправо
-        if (newPos > this.cursorX && diffX > -150) {
+        if (event.pageX > this.cursorX && diffX > -150) {
         	console.log('right');
         	this.moveForward();
         }
