@@ -78,7 +78,7 @@ function XSlider(config) {
     this.initializeEvents();//инициализация событий touch & mouse
     this.moved = false;//флаг для свайпа
     this.sliderCoords = null;//координаты слайдера
-    this.cursorX = null;//координаты курсора
+    this.startX = null;//координаты клика
 
     this.visibleItems = this.getVisibleItems();//карточки видимые во вьюпорте
 
@@ -167,61 +167,32 @@ XSlider.prototype.moveForward = function(evt) {
     //         }
     //     );
 
-	//this.pos++;
+	
+	var slides = container.children;
 
-	//if (this.pos > this.slides.length / this.visibleItems.length - 1) {
-	//if (this.pos > 0) {
-		//container.style.transition = null;
-		//container.style.left = this.itemWidth * this.visibleItems.length + 'px';
+	for (var i = 0; i < this.visibleItems.length; i++) {
+		var cloneElem = slides[i].cloneNode(true);
+		container.appendChild(cloneElem);
+	}
+    container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
+    container.style.left = -this.itemWidth * this.visibleItems.length + 'px';
+    
 
-		var slides = container.children;
+    setTimeout(function(){
+        for (var i = 0; i < that.visibleItems.length; i++) {
+            container.removeChild(slides[0]);
+        }
+		slides[0].offsetParent;
 
-		for (var i = 0; i < this.visibleItems.length; i++) {
-			var cloneElem = slides[i].cloneNode(true);
-			
-			container.appendChild(cloneElem);
-			//container.removeChild(slides[0]);
-			
-			
-		}
-        container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
-        container.style.left = -that.itemWidth * that.visibleItems.length + 'px';
-        
-
-        setTimeout(function(){
-            for (var i = 0; i < that.visibleItems.length; i++) {
-                container.removeChild(slides[0]);
-            }
-            container.style.transition = null;
-            container.style.left = 0;
-        }, this.transitionSpeed)
-
-
-       
-		//slides[0].offsetParent; //запрашивает какую-нибуть метрику dom для reflow
-	 	//this.pos--;
-		//console.log('pos ', this.pos);
-		//this.container.style.left = -(this.pos - 2) * this.itemWidth * this.visibleItems.length + 'px';
-		//this.container.style.transition = 'left 0.6s ease-in-out';
-
-
-	//} else {
-		// requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
-		//     requestAnimationFrame(function(){ //предыдущий reflow рассчитал новый dom элемент можно делать анимацию.
-		// 		container.style.transition = 'left 0.6s ease-in-out';
-		// 		container.style.left = 0 + 'px';
-		// 		//this.container.style.left = -1 * this.itemWidth * this.visibleItems.length + 'px';
-		//     })
-		// });
-		
-
-	//}
+        container.style.transition = null;
+        container.style.left = 0;
+    }, this.transitionSpeed)
 
 	that.endSlide();
 
 };
 
-XSlider.prototype.moveBack = function(e) {
+XSlider.prototype.moveBack = function(evt) {
 
 	var that = this;
     var container = this.container;
@@ -236,29 +207,21 @@ XSlider.prototype.moveBack = function(e) {
 	// 	);
     	
 	
-	//this.pos--;
+	var slides = this.container.children;
+	container.style.transition = null;
+	container.style.left = -1 * this.itemWidth * this.visibleItems.length + 'px';
 
-	//if (this.pos < 0) {
-		var slides = this.container.children;
-		container.style.transition = null;
-		container.style.left = -1 * this.itemWidth * this.visibleItems.length + 'px';
+	for (var i = 0; i < this.visibleItems.length; i++) {
+		container.insertBefore(slides[this.slides.length - 1], slides[0]);
+	}
 
-		for (var i = 0; i < this.visibleItems.length; i++) {
-			container.insertBefore(slides[this.slides.length - 1], slides[0]);
-		}
-
-		//slides[0].offsetParent; 
-		//this.pos++;
-
-//}	
-		requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
-            container.style.transition = 'left ' + that.transitionSpeed +'ms ease-in-out';
-			//this.container.style.left = -this.itemWidth * this.visibleItems.length * this.pos + 'px';
-			container.style.left = 0 + 'px';
-		});
-		
-		
-		that.endSlide.bind(that);
+	slides[0].offsetParent;
+	//requestAnimationFrame(function(){ //ожидаем следующего запланированного reflow/repain;
+        container.style.transition = 'left ' + that.transitionSpeed +'ms ease-in-out';
+		container.style.left = 0 + 'px';
+	//});
+			
+	that.endSlide.bind(that);
 };
 
 XSlider.prototype.endSlide = function() {
@@ -323,16 +286,16 @@ XSlider.prototype.initializeEvents = function() {
     		{up:'dragend', down:'dragstart', move:'dragenter', end:'dragleave'}]; 
 
     //for (var i = 0 ; i < this.viewport.length; i++) {
-   
-        for (let device of arr) {
+        for(var i  =0; i < arr.length; i++){
+    
             //this.viewport[i].addEventListener(device.down, this.swipeStart.bind(this));
             //this.viewport[i].addEventListener(device.move, this.swipeMove.bind(this));
             //this.viewport[i].addEventListener(device.up, this.swipeEnd.bind(this));
             //this.viewport[i].addEventListener(device.end, this.swipeEnd.bind(this));
-            this.viewport.addEventListener(device.down, this.swipeStart.bind(this));
-            this.viewport.addEventListener(device.move, this.swipeMove.bind(this));
-            this.viewport.addEventListener(device.up, this.swipeEnd.bind(this));
-            this.viewport.addEventListener(device.end, this.swipeEnd.bind(this));
+            this.viewport.addEventListener(arr[i].down, this.swipeStart.bind(this));
+            this.viewport.addEventListener(arr[i].move, this.swipeMove.bind(this));
+            this.viewport.addEventListener(arr[i].up, this.swipeEnd.bind(this));
+            this.viewport.addEventListener(arr[i].end, this.swipeEnd.bind(this));
         }
 
         //this.viewport[i].addEventListener('click', this.clickHandler);
@@ -346,24 +309,22 @@ XSlider.prototype.initializeEvents = function() {
 
 };
 
-XSlider.prototype.swipeStart = function(event) {
+XSlider.prototype.swipeStart = function(evt) {
 	//event.preventDefault();
 	//event.stopPropagation();
 
-   // var container = this.container;
- //   var	viewport = this.viewport;
-
-    this.cursorX = this.value = event.pageX;// Получаем координаты клика мыши по оси Х
-    //var cursorY = this.value = event.pageY;
-    console.log('координаты клика мыши ', this.cursorX);
+    this.startX = parseInt(evt.changedTouches[0].pageX);// Получаем координаты клика мыши по оси Х
+    //var startY = this.value = event.pageY;
+    console.log('координаты клика мыши ', this.startX);
 
     this.moved = true;
    // this.sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
     //console.log('координаты полосы слайдера ', this.sliderCoords);
+
 };
 
 
-XSlider.prototype.swipeMove = function(event) {
+XSlider.prototype.swipeMove = function(evt) {
 	//event.preventDefault();
 	//event.stopPropagation();
     if (this.moved === true) {
@@ -374,23 +335,23 @@ XSlider.prototype.swipeMove = function(event) {
         //console.log('координата смещения ', newPos);
         
         //разница между начальным и новым положением курсора
-        var diffX = this.cursorX - event.pageX;
+        var diffX = this.startX -  parseInt(evt.changedTouches[0].pageX);
         console.log(diffX);
-        console.log('b', this.cursorX - event.pageX);
         
         // Если мышь ушла влево
-        if (event.pageX < this.cursorX && diffX > 350) {
+        if (evt.changedTouches[0].pageX < this.startX && diffX > 350) {
         	console.log("left");
         	this.moveBack();
             
         }
         // Если мышь ушла вправо
-        if (event.pageX > this.cursorX && diffX > -150) {
+        if (event.changedTouches[0].pageX > this.startX && diffX > -150) {
         	console.log('right');
         	this.moveForward();
         }
         
     }
+	//event.preventDefault();
 
 };
 
