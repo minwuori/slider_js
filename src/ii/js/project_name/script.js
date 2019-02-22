@@ -79,6 +79,7 @@ function XSlider(config) {
     this.moved = false;//флаг для свайпа
     this.sliderCoords = null;//координаты слайдера
     this.startX = null;//координаты клика
+    this.diffX = null;//разница между начальным и новым положением курсора
 
     this.visibleItems = this.getVisibleItems();//карточки видимые во вьюпорте
 
@@ -312,42 +313,72 @@ XSlider.prototype.initializeEvents = function() {
 XSlider.prototype.swipeStart = function(evt) {
 	//event.preventDefault();
 	//event.stopPropagation();
+	this.container.style.transition = null;
+	this.container.style.left = 0 + 'px';
 
     this.startX = parseInt(evt.changedTouches[0].pageX);// Получаем координаты клика мыши по оси Х
     //var startY = this.value = event.pageY;
     console.log('координаты клика мыши ', this.startX);
 
     this.moved = true;
-   // this.sliderCoords = this.getCoordsElement(container); //Получаем координаты полосы слайдера.
-    //console.log('координаты полосы слайдера ', this.sliderCoords);
+    this.sliderCoords = this.getCoordsElement(this.container); //Получаем координаты полосы слайдера.
+    console.log('координаты полосы слайдера ', this.sliderCoords);
 
 };
 
 
 XSlider.prototype.swipeMove = function(evt) {
+	var container = this.container;
+	var slides = this.container.children;
+
+
 	//event.preventDefault();
 	//event.stopPropagation();
     if (this.moved === true) {
     	//Вычисляем кооридинату смещения, вычитая из координаты текущего положения мыши по оси Х 
         //величину отступа, рассчитанного ранее при клике и координату левой границы полосы слайдера. 
 
-        //var newPos = event.pageX - this.sliderCoords.left; 
-        //console.log('координата смещения ', newPos);
+        // var newPosContainer = parseInt(event.changedTouches[0].pageX - this.sliderCoords.left); 
+        // console.log('координата смещения ', newPosContainer);
         
         //разница между начальным и новым положением курсора
-        var diffX = this.startX -  parseInt(evt.changedTouches[0].pageX);
-        console.log(diffX);
+        this.diffX = this.startX - parseInt(evt.changedTouches[0].pageX);
+        console.log('разница смещения', this.diffX);
         
         // Если мышь ушла влево
-        if (evt.changedTouches[0].pageX < this.startX && diffX > 350) {
-        	console.log("left");
-        	this.moveBack();
-            
+        if (evt.changedTouches[0].pageX < this.startX) {
+        	//console.log("начальная возиция контейнера", parseInt(this.container.style.getPropertyValue('left')));
+        	//this.moveBack();
+
+            //var newPosContainer = (this.sliderCoords.left - this.diffX);
+        	//console.log('новая возиция контейнера', newPosContainer)
+        	container.style.left = -this.diffX + 'px';
+    		
         }
+
         // Если мышь ушла вправо
-        if (event.changedTouches[0].pageX > this.startX && diffX > -150) {
-        	console.log('right');
-        	this.moveForward();
+        if (evt.changedTouches[0].pageX > this.startX) {
+        	
+    		var countCard = Math.ceil(this.diffX / this.itemWidth); //кол-во просвайпанных карточек 
+    		console.log('кол-во просвайпанных карточек ', countCard);
+			//container.insertBefore(slides[this.slides.length - 1], slides[0]);
+
+
+        	container.style.left = -this.diffX + 'px';
+
+   //      	if (this.diffX > this.itemWidth / 2) {//если мышь ушла влево
+			
+			//  container.style.left = -this.diffX * this.itemWidth + 'px';
+
+			// 	for (var i = 0; i < countCard; i++) {
+			// 		container.insertBefore(slides[this.slides.length - 1], slides[0]);
+			// 	}
+
+			// slides[0].offsetParent;
+			
+		 //        container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
+			//  	container.style.left = 0 + 'px';
+			// }
         }
         
     }
@@ -357,6 +388,38 @@ XSlider.prototype.swipeMove = function(evt) {
 
 
 XSlider.prototype.swipeEnd = function(event) {
+
+	var slides = this.container.children;
+	var container = this.container;
+
+	if (this.diffX > this.itemWidth / 2) {//если мышь ушла влево
+		var countCard = Math.ceil(this.diffX / this.itemWidth); //кол-во просвайпанных карточек 
+		console.log('кол-во пролистанных карточек ', countCard);
+
+		for (var i = 0; i < countCard; i++) {
+			var cloneElem = slides[i].cloneNode(true);
+			container.appendChild(cloneElem);
+		}
+
+		this.container.style.left = -this.diffX * this.itemWidth + 'px';
+		this.container.transition = 'left' + 5000 + 'ms ease-in-out';
+
+		setTimeout(function(){
+	        for (var i = 0; i < countCard; i++) {
+	            container.removeChild(slides[0]);
+	        }
+			slides[0].offsetParent;
+
+	        container.style.transition = null;
+	        container.style.left = 0;
+	    }, 50)
+		
+	} else {
+		this.container.style.left = 0 + 'px';
+
+	}
+	
+
     this.moved = false;
     console.log('stop');
 };
