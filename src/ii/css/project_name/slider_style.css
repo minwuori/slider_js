@@ -379,6 +379,10 @@
   width: 60px;
   height: 60px; }
 
+.slider__disable_arrow svg{
+  fill: rgba(0, 0, 0, 0.15);
+}
+
 .slider__left {
   left: 0; }
 
