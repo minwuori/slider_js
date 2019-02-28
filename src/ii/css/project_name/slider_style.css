@@ -379,7 +379,7 @@
   width: 60px;
   height: 60px; }
 
-.slider__disable_arrow svg{
+.slider__arrow_disable svg{
   fill: rgba(0, 0, 0, 0.15);
 }
 
