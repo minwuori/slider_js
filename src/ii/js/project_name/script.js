@@ -187,9 +187,13 @@ XSlider.prototype.endSlide = function() {
     this.onScrolled = false;
     // this.slider.trigger(XSlider.events.slideEnd)
 
-    var event = document.createEvent('Event');
-	event.initEvent(XSlider.events.slideEnd, true, true);
+    //var event = document.createEvent('Event');
+	//event.initEvent(XSlider.events.slideEnd, true, true);
+	//this.slider.dispatchEvent(event);
+
+	var event = new Event('xslider.events.slideEnd', {bubbles: true, cancelable: true});
 	this.slider.dispatchEvent(event);
+	console.log(this.slider)
 
     //viewer.checkSelector('.slider .product-card');
 };
