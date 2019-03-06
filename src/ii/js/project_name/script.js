@@ -14,6 +14,8 @@ function XSlider(config) {
 	};
 
 	this.slider = config.element;
+	this.slider.setAttribute('data-slider', '');//установить аттрибут слайдеру на странице
+    this.slider.slider = this;//передается в partners.js свойство slider
 
     this.next = this.slider.querySelector(this.selectors.next);//стрелка вперед
     this.prev = this.slider.querySelector(this.selectors.prev);//стрелка назад
@@ -56,7 +58,7 @@ function XSlider(config) {
     this.visibleItems = this.getVisibleItems();//карточки видимые во вьюпорте
 
     this.transitionSpeed = 600;//скорость анимации
-
+    this.events = {}
 }
 
 XSlider.events = {
@@ -149,7 +151,6 @@ XSlider.prototype.moveForward = function(evt) {
     	this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 	}
 
-	
 	that.endSlide();
 
 };
@@ -187,13 +188,8 @@ XSlider.prototype.endSlide = function() {
     this.onScrolled = false;
     // this.slider.trigger(XSlider.events.slideEnd)
 
-    //var event = document.createEvent('Event');
-	//event.initEvent(XSlider.events.slideEnd, true, true);
-	//this.slider.dispatchEvent(event);
-
-	var event = new Event('xslider.events.slideEnd', {bubbles: true, cancelable: true});
-	this.slider.dispatchEvent(event);
-	console.log(this.slider)
+    var event = new CustomEvent('xslider.events.slideEnd', {bubbles: true, cancelable: true});
+    this.slider.dispatchEvent(event);
 
     //viewer.checkSelector('.slider .product-card');
 };
@@ -222,6 +218,15 @@ XSlider.prototype.getVisibleItems = function() {
 };
 
 XSlider.prototype.isSlideVisible = function(slide) {
+
+	/* var viewportStart = this.$viewport.offset().left;
+    var viewportFinish = viewportStart + this.viewportWidth;
+
+    var itemStart = $(slide).offset().left;
+
+    return itemStart < viewportFinish; */
+
+    
     var viewportStart = parseFloat(this.getCoordsElement(this.viewport).left);
     var viewportFinish = viewportStart + this.viewportWidth;
 
@@ -296,7 +301,6 @@ XSlider.prototype.swipeEnd = function(event) {
 			this.container.style.left = -lastSlide + 'px';
 			this.container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
 	    	
-			this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 
 		} else {
 
@@ -305,24 +309,19 @@ XSlider.prototype.swipeEnd = function(event) {
 	    	this.container.style.left = newPosContainer  + 'px';
 			this.container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
 
-	    	this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
-
 		}
 
-		
+		this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 		that.endSlide();
 		
 	} else {//если мышь ушла вправо больше, чем на 1/2 ширины карточки
-		console.log(this.posContainer, this.itemWidth)
 
-		if (-this.posContainer <= this.itemWidth){
+		if (-this.posContainer <= this.itemWidth){ //если первый слайд
 
 	    	this.prev.classList.add(this.selectors.disable.substring(1)); //задизейблить кнопку назад
 
 	    	this.container.style.left = 0 + 'px';
 			this.container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
-
-			this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 
 		} else {
 
@@ -331,10 +330,12 @@ XSlider.prototype.swipeEnd = function(event) {
 			this.container.style.left = this.posContainer - countCard * this.itemWidth + 'px';
 			this.container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
 
-			this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
-
 		}
+
+		this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 		that.endSlide();
+		console.log(this.posContainer, this.itemWidth)
+
 
 	}
 };
