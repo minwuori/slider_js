@@ -9,7 +9,8 @@ function XSlider(config) {
         container: '.container_cards',
         slide: '.product-card',
         viewport: '.slider__viewport',
-        disable: '.slider__arrow_disable'
+        disable: '.slider__arrow_disable',
+        image: '[data-original]'
 	       
 	};
 
@@ -58,11 +59,11 @@ function XSlider(config) {
     this.visibleItems = this.getVisibleItems();//карточки видимые во вьюпорте
 
     this.transitionSpeed = 600;//скорость анимации
-    this.events = {}
-}
 
-XSlider.events = {
-    "slideEnd": "xslider.events.slideEnd"
+    this.lazyItems = this.slider.querySelectorAll(this.selectors.image);//изображения для ленивой загрузки
+    	console.log(this.lazyItems)
+    this.lazySlide() //ленивая загрузка изображений
+	
 }
 
 XSlider.prototype.countViewportWidth = function() {
@@ -232,7 +233,9 @@ XSlider.prototype.isSlideVisible = function(slide) {
 
     var itemStart = parseFloat(this.getCoordsElement(slide).left);
 
-    return itemStart < viewportFinish;
+    if (itemStart >= viewportStart && itemStart < viewportFinish ) {
+    	return itemStart;
+    }
 };
 
 
@@ -334,14 +337,47 @@ XSlider.prototype.swipeEnd = function(event) {
 
 		this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 		that.endSlide();
-		console.log(this.posContainer, this.itemWidth)
-
-
 	}
 };
 
 
+XSlider.prototype.lazySlide = function () {
 
+	for (var i = 0; i < this.lazyItems.length; i++){
+		var isSlideVisible = this.isSlideVisible(this.lazyItems[i])
+		if (isSlideVisible) { // проверка на видимость во viewport
+			if (!this.lazyItems[i].src) { // проверка элемента на наличие атрибута src
+				console.error("lazy-load не поддерживается для этого элемента (" + this.lazyItems[i].tagName + ")");
+				return;
+			}
+			if (!this.lazyItems[i].hasAttribute("data-js-loaded")) {
+				var src = this.lazyItems[i].getAttribute("data-original");
+				if (src) { // если атрибут data-original присутствует
+					this.lazyItems[i].src = src;
+					this.lazyItems[i].setAttribute("data-js-loaded", "");
+					this.lazyItems[i].removeAttribute("data-original");
+					this.lazyItems[i].onerror = function() { // обработка ошибок загрузки
+						console.error("загрузка источника не удалась (элемент: " + this.lazyItems[i].tagName + ", путь: " + this.lazyItems[i].src + ")");
+					};
+					setTimeout(function() { // удаление обработчика ошибок
+						this.lazyItems[i].onerror = null;
+					}, 3000);
+				} else console.error("отсутствует оригинальный источник (элемент: " + this.lazyItems[i].tagName + ", путь: " + this.lazyItems[i].src + ")");
+				
+			}
+
+		} 
+	}
+
+	//Array.prototype.slice.call(this.lazyItems, 0).forEach(function(el) {
+   // Array.prototype.forEach.call(this.lazyItems, function(el) {
+		
+		
+		
+	//});
+
+	
+}
 
 /* XSLIDER END */
 
@@ -718,7 +754,7 @@ function lazyUpdate()  {
 
     /* SLIDER */
     var carousels = document.querySelectorAll('[data-carousel]');
-    carousels.forEach(function(item, i){
+    Array.prototype.forEach.call(carousels, function(item, i){
 
         new XSlider({
             element: item
