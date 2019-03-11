@@ -61,8 +61,7 @@ function XSlider(config) {
     this.transitionSpeed = 600;//скорость анимации
 
     this.lazyItems = this.slider.querySelectorAll(this.selectors.image);//изображения для ленивой загрузки
-    	console.log(this.lazyItems)
-    this.lazySlide() //ленивая загрузка изображений
+    this.lazySlide(); //ленивая загрузка изображений
 	
 }
 
@@ -151,7 +150,10 @@ XSlider.prototype.moveForward = function(evt) {
 
     	this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 	}
-
+	// requestAnimationFrame(function(){
+ //    	console.log(this.lazySlide.bind(this))
+	// });
+	this.lazySlide();
 	that.endSlide();
 
 };
@@ -281,7 +283,10 @@ XSlider.prototype.swipeMove = function(evt) {
 	} else {
 
 		this.container.style.left = -this.diffX + 'px';
-	}	
+	}
+
+    this.lazySlide(); //загружать изображения
+
 };
 
 
@@ -344,25 +349,19 @@ XSlider.prototype.swipeEnd = function(event) {
 XSlider.prototype.lazySlide = function () {
 
 	for (var i = 0; i < this.lazyItems.length; i++){
-		var isSlideVisible = this.isSlideVisible(this.lazyItems[i])
+		var isSlideVisible = this.isSlideVisible(this.slides[i]);
 		if (isSlideVisible) { // проверка на видимость во viewport
-			if (!this.lazyItems[i].src) { // проверка элемента на наличие атрибута src
-				console.error("lazy-load не поддерживается для этого элемента (" + this.lazyItems[i].tagName + ")");
-				return;
-			}
-			if (!this.lazyItems[i].hasAttribute("data-js-loaded")) {
+			console.log(this.lazyItems[i], isSlideVisible, -this.posContainer, this.viewportWidth, isSlideVisible <= -this.posContainer + this.viewportWidth)
+			if (!this.lazyItems[i].hasAttribute("data-loaded")) {
+				//console.log(this.lazyItems[i])
+
 				var src = this.lazyItems[i].getAttribute("data-original");
 				if (src) { // если атрибут data-original присутствует
 					this.lazyItems[i].src = src;
-					this.lazyItems[i].setAttribute("data-js-loaded", "");
+					this.lazyItems[i].setAttribute("data-loaded", "");
 					this.lazyItems[i].removeAttribute("data-original");
-					this.lazyItems[i].onerror = function() { // обработка ошибок загрузки
-						console.error("загрузка источника не удалась (элемент: " + this.lazyItems[i].tagName + ", путь: " + this.lazyItems[i].src + ")");
-					};
-					setTimeout(function() { // удаление обработчика ошибок
-						this.lazyItems[i].onerror = null;
-					}, 3000);
-				} else console.error("отсутствует оригинальный источник (элемент: " + this.lazyItems[i].tagName + ", путь: " + this.lazyItems[i].src + ")");
+					//console.log(src)
+				}
 				
 			}
 
@@ -404,44 +403,44 @@ XSlider.prototype.lazySlide = function () {
 // /* END HELPERS */
 
 /* LAZY LOAD */
-function lazy(){
-    if (lazy.lazyLoad) {
-        lazy.lazyLoad.update();
-    } else {
-        lazy.lazyLoad = $('.lazy').Lazy({
-            chainable: false,
-            attribute: 'data-original',
-            effect: 'fadeIn',
-            effectTime: 1500,
-            visibleOnly: true,
-            threshold: 100,
-            beforeLoad: function(element) {
-                element[0].classList.remove('lazy');
-                element[0].setAttribute('data-loaded', '');
-            }
-        });
-    }
-}
+// function lazy(){
+//     if (lazy.lazyLoad) {
+//         lazy.lazyLoad.update();
+//     } else {
+//         lazy.lazyLoad = $('.lazy').Lazy({
+//             chainable: false,
+//             attribute: 'data-original',
+//             effect: 'fadeIn',
+//             effectTime: 1500,
+//             visibleOnly: true,
+//             threshold: 100,
+//             beforeLoad: function(element) {
+//                 element[0].classList.remove('lazy');
+//                 element[0].setAttribute('data-loaded', '');
+//             }
+//         });
+//     }
+// }
 
-lazy.add = function() {
-    if (lazy.lazyLoad) {
+// lazy.add = function() {
+//     if (lazy.lazyLoad) {
 
-        lazy.lazyLoad.addItems('.lazy');
-    }
-    lazy();
-}
+//         lazy.lazyLoad.addItems('.lazy');
+//     }
+//     lazy();
+// }
 
 //fix. пока ничего лучше нет
-function lazyUpdate()  {
-    lazy.lazyLoad = $('.lazy').Lazy({
-        chainable: false,
-        attribute: 'data-original',
-        effect: 'fadeIn',
-        effectTime: 1500,
-        visibleOnly: true,
-        threshold: 100,
-    });
-}
+// function lazyUpdate()  {
+//     lazy.lazyLoad = $('.lazy').Lazy({
+//         chainable: false,
+//         attribute: 'data-original',
+//         effect: 'fadeIn',
+//         effectTime: 1500,
+//         visibleOnly: true,
+//         threshold: 100,
+//     });
+// }
 /* END LAZY LOAD */
 
 // $(document).ready( function() {
