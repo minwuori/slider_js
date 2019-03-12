@@ -139,7 +139,7 @@ XSlider.prototype.moveForward = function(evt) {
 		this.container.style.left = -lastSlide + 'px';
 		this.container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
     	
-		return this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
+		this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 
 	} else {
 
@@ -150,10 +150,13 @@ XSlider.prototype.moveForward = function(evt) {
 
     	this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 	}
-	// requestAnimationFrame(function(){
- //    	console.log(this.lazySlide.bind(this))
-	// });
-	this.lazySlide();
+
+	setTimeout(function(){
+
+		that.lazySlide()
+
+	}, this.transitionSpeed)
+
 	that.endSlide();
 
 };
@@ -295,7 +298,7 @@ XSlider.prototype.swipeEnd = function(event) {
 	var that = this;
 	var countCard = Math.ceil(this.diffX / this.itemWidth); //кол-во просвайпанных карточек 
 	
-	if (this.diffX > this.itemWidth / 3) {//если мышь ушла влево больше, чем на 1/2 ширины карточки
+	if (this.diffX > this.itemWidth / 3) {//если мышь ушла влево больше, чем на 1/3 ширины карточки
 		
 
 		var lastSlide = this.itemWidth * this.slides.length - this.itemWidth * this.visibleItems.length //положение последнего слайда
@@ -322,7 +325,7 @@ XSlider.prototype.swipeEnd = function(event) {
 		this.posContainer = parseInt(this.container.style.left);//запомнить новое значение позиции контейнера
 		that.endSlide();
 		
-	} else {//если мышь ушла вправо больше, чем на 1/2 ширины карточки
+	} else {//если мышь ушла вправо 
 
 		if (-this.posContainer <= this.itemWidth){ //если первый слайд
 
@@ -351,16 +354,17 @@ XSlider.prototype.lazySlide = function () {
 	for (var i = 0; i < this.lazyItems.length; i++){
 		var isSlideVisible = this.isSlideVisible(this.slides[i]);
 		if (isSlideVisible) { // проверка на видимость во viewport
-			console.log(this.lazyItems[i], isSlideVisible, -this.posContainer, this.viewportWidth, isSlideVisible <= -this.posContainer + this.viewportWidth)
+			//console.log(this.lazyItems[i], isSlideVisible, -this.posContainer, this.viewportWidth, isSlideVisible <= -this.posContainer + this.viewportWidth)
+			console.log('видимый элемент ', this.lazyItems[i]);
 			if (!this.lazyItems[i].hasAttribute("data-loaded")) {
-				//console.log(this.lazyItems[i])
-
 				var src = this.lazyItems[i].getAttribute("data-original");
+				console.log('во вьюпорте незагруженное изображение ', src);
+
 				if (src) { // если атрибут data-original присутствует
 					this.lazyItems[i].src = src;
 					this.lazyItems[i].setAttribute("data-loaded", "");
 					this.lazyItems[i].removeAttribute("data-original");
-					//console.log(src)
+					console.log('изображение загружено');
 				}
 				
 			}
