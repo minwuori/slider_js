@@ -327,7 +327,7 @@ XSlider.prototype.swipeEnd = function(event) {
 		
 	} else {//если мышь ушла вправо 
 
-		if (-this.posContainer <= this.itemWidth){ //если первый слайд
+		if (-this.posContainer <= this.viewportWidth / 1.5){ //если первый слайд
 
 	    	this.prev.classList.add(this.selectors.disable.substring(1)); //задизейблить кнопку назад
 
@@ -335,7 +335,7 @@ XSlider.prototype.swipeEnd = function(event) {
 			this.container.style.transition = 'left ' + this.transitionSpeed +'ms ease-in-out';
 
 		} else {
-
+			
 		  	this.next.classList.remove(this.selectors.disable.substring(1)); //убрать дизейбл кнопки вперед
 
 			this.container.style.left = this.posContainer - countCard * this.itemWidth + 'px';
@@ -354,31 +354,19 @@ XSlider.prototype.lazySlide = function () {
 	for (var i = 0; i < this.lazyItems.length; i++){
 		var isSlideVisible = this.isSlideVisible(this.slides[i]);
 		if (isSlideVisible) { // проверка на видимость во viewport
-			//console.log(this.lazyItems[i], isSlideVisible, -this.posContainer, this.viewportWidth, isSlideVisible <= -this.posContainer + this.viewportWidth)
-			console.log('видимый элемент ', this.lazyItems[i]);
 			if (!this.lazyItems[i].hasAttribute("data-loaded")) {
 				var src = this.lazyItems[i].getAttribute("data-original");
-				console.log('во вьюпорте незагруженное изображение ', src);
 
 				if (src) { // если атрибут data-original присутствует
 					this.lazyItems[i].src = src;
 					this.lazyItems[i].setAttribute("data-loaded", "");
 					this.lazyItems[i].removeAttribute("data-original");
-					console.log('изображение загружено');
 				}
 				
 			}
 
 		} 
 	}
-
-	//Array.prototype.slice.call(this.lazyItems, 0).forEach(function(el) {
-   // Array.prototype.forEach.call(this.lazyItems, function(el) {
-		
-		
-		
-	//});
-
 	
 }
 
