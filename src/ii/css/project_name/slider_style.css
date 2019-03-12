@@ -382,6 +382,9 @@
 .slider__left {
   left: 0; }
 
+.slider__arrow_disable svg{
+  fill: rgba(0, 0, 0, 0.15);
+}
 .slider__right {
   right: 0; }
 
