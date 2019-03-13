@@ -10,7 +10,9 @@ function XSlider(config) {
         slide: '.product-card',
         viewport: '.slider__viewport',
         disable: '.slider__arrow_disable',
-        image: '[data-original]'
+        image: '[data-original]',
+        imageLoaded: 'data-loaded',
+        imageAttr: 'data-original'
 	       
 	};
 
@@ -61,7 +63,7 @@ function XSlider(config) {
     this.transitionSpeed = 600;//скорость анимации
 
     this.lazyItems = this.slider.querySelectorAll(this.selectors.image);//изображения для ленивой загрузки
-    this.lazySlide(); //ленивая загрузка изображений
+    this.lazyLoadSlide(); //ленивая загрузка изображений
 	
 }
 
@@ -125,6 +127,9 @@ XSlider.prototype.showControls = function() {
 XSlider.prototype.moveForward = function(evt) {
 	
     if (this.onScrolled) return;
+    
+    if (this.next.classList.contains(this.selectors.disable.substring(1))) return;//если кнопка "вперед" задизейблена, то ничего не делать
+
     var that = this;
     this.onScrolled = true;
     var container = this.container;
@@ -153,7 +158,7 @@ XSlider.prototype.moveForward = function(evt) {
 
 	setTimeout(function(){
 
-		that.lazySlide()
+		that.lazyLoadSlide()
 
 	}, this.transitionSpeed)
 
@@ -288,7 +293,7 @@ XSlider.prototype.swipeMove = function(evt) {
 		this.container.style.left = -this.diffX + 'px';
 	}
 
-    this.lazySlide(); //загружать изображения
+    this.lazyLoadSlide(); //загружать изображения
 
 };
 
@@ -349,27 +354,25 @@ XSlider.prototype.swipeEnd = function(event) {
 };
 
 
-XSlider.prototype.lazySlide = function () {
+XSlider.prototype.lazyLoadSlide = function () {
 
 	for (var i = 0; i < this.lazyItems.length; i++){
 		var isSlideVisible = this.isSlideVisible(this.slides[i]);
 		if (isSlideVisible) { // проверка на видимость во viewport
-			if (!this.lazyItems[i].hasAttribute("data-loaded")) {
-				var src = this.lazyItems[i].getAttribute("data-original");
+			if (!this.lazyItems[i].hasAttribute(this.selectors.imageLoaded)) {
+				var src = this.lazyItems[i].getAttribute(this.selectors.imageAttr);
 
 				if (src) { // если атрибут data-original присутствует
 					this.lazyItems[i].src = src;
-					this.lazyItems[i].setAttribute("data-loaded", "");
-					this.lazyItems[i].removeAttribute("data-original");
+					this.lazyItems[i].setAttribute(this.selectors.imageLoaded, "");
+					this.lazyItems[i].removeAttribute(this.selectors.imageAttr);
 				}
 			}
 		} 
 	}
 }
+
 /* XSLIDER END */
-
-
-
 
 
 
